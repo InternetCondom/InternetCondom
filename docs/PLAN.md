@@ -28,7 +28,8 @@ positives and user-adjustable thresholds.
 - Decide user-adjustable thresholds and defaults.
 
 ### Phase 1 — Data Sourcing (AI-first)
-- Ingest with OpenClaw and write JSONL records in the repo schema.
+- Ingest with OpenClaw only (no scripts in this repo).
+- Use the provided browser to collect all source content.
 - Use AI models to label crypto scam content at scale.
 - For `ai_reply`, source candidates by searching X for “AI reply”.
 - Store provenance for every record (platform, source id/url, timestamp).

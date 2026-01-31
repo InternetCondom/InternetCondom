@@ -10,9 +10,23 @@ stored for every record and without losing important information.
 - Web: site content or scraped text you control.
 
 ## Ingestion
-- Use your existing OpenClaw instance to collect posts and write JSONL records
-  in the schema below.
+- Use your existing OpenClaw instance to collect posts via its provided browser
+  and write JSONL records in the schema below.
+- OpenClaw is the only ingestion path (no scripts in this repo).
 - Ensure the OpenClaw instructions preserve full text and metadata.
+
+## OpenClaw JSONL instruction block (copy/paste)
+```
+Collect posts from X using your queries. For each post, output one JSONL line
+with the required schema fields:
+id, platform="x", source_id, source_url, collected_at (ISO), text, label,
+urls[], addresses[], notes (optional).
+
+Preserve the original text exactly (including emojis, casing, punctuation).
+Do not truncate text. Keep original URLs (no shortening or normalization).
+
+Write to: data/raw/x_openclaw_YYYYMMDD.jsonl
+```
 
 ## AI-first labeling workflow
 1) Collect raw text + metadata.

@@ -18,9 +18,10 @@ other undesirable content.
 ## Data
 See `LABELS.md` for labeling rules and `data/sample.jsonl` for the data shape.
 Dataset creation is AI-first: use AI models to label crypto scams at scale and
-source `ai_reply` candidates by searching X for “AI reply”. Store provenance
-for every sample (platform, source id/url, timestamp). Preserve the original
-text and URLs without lossy transformations.
+source `ai_reply` candidates by searching X for “AI reply”. Ingestion is done
+entirely via OpenClaw (no scripts in this repo), using its provided browser to
+collect everything. Store provenance for every sample (platform, source id/url,
+timestamp). Preserve the original text and URLs without lossy transformations.
 
 ## Local-first
 No network calls required for classification. Models should run on CPU.
