@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/x-post-snapshot.json",
+  "title": "X Post Snapshot (lossless)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["snapshot_id", "retrieved_at", "endpoint", "query", "post_id", "raw"],
+  "properties": {
+    "snapshot_id": {
+      "description": "Unique identifier for this stored snapshot.",
+      "type": "string",
+      "minLength": 1
+    },
+    "retrieved_at": {
+      "description": "When this snapshot was retrieved from X (RFC 3339).",
+      "type": "string",
+      "format": "date-time"
+    },
+    "endpoint": {
+      "description": "X API endpoint used to retrieve the post, e.g. /2/tweets/:id.",
+      "type": "string",
+      "minLength": 1
+    },
+    "query": {
+      "description": "Request parameters that affect shape/completeness (fields, expansions, etc.).",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "tweet_fields": { "type": "array", "items": { "type": "string" } },
+        "expansions": { "type": "array", "items": { "type": "string" } },
+        "user_fields": { "type": "array", "items": { "type": "string" } },
+        "media_fields": { "type": "array", "items": { "type": "string" } },
+        "poll_fields": { "type": "array", "items": { "type": "string" } },
+        "place_fields": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "auth_context": {
+      "description": "How the request was authorized (app-only vs user-context).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["app_only", "user_context"] },
+        "user_id": {
+          "description": "If user_context, the authenticating user id (string).",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "post_id": {
+      "description": "The primary post id (string).",
+      "type": "string",
+      "pattern": "^[0-9]+$"
+    },
+    "raw": {
+      "description": "Lossless raw API response as stored (do not transform).",
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["data"],
+      "properties": {
+        "data": {
+          "description": "A Post (Tweet) object as returned by X API v2.",
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "string", "pattern": "^[0-9]+$" },
+            "text": { "type": "string" },
+            "created_at": { "type": "string", "format": "date-time" },
+            "author_id": { "type": "string", "pattern": "^[0-9]+$" },
+            "conversation_id": { "type": "string", "pattern": "^[0-9]+$" },
+            "in_reply_to_user_id": { "type": "string", "pattern": "^[0-9]+$" },
+            "lang": { "type": "string", "minLength": 2, "maxLength": 16 },
+            "source": { "type": "string" },
+            "possibly_sensitive": { "type": "boolean" },
+            "reply_settings": { "type": "string" },
+            "community_id": { "type": "string" },
+            "card_uri": { "type": "string" },
+            "edit_history_tweet_ids": {
+              "description": "Edit chain, oldest->newest.",
+              "type": "array",
+              "items": { "type": "string", "pattern": "^[0-9]+$" }
+            },
+            "edit_controls": {
+              "description": "Edit metadata (shape may vary). Store as-is.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "entities": {
+              "description": "Entities (hashtags, urls, mentions, annotations, cashtags).",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "context_annotations": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true }
+            },
+            "attachments": {
+              "description": "Media keys, poll ids, etc.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "referenced_tweets": {
+              "description": "Retweet/quote/reply relationships.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["id", "type"],
+                "properties": {
+                  "id": { "type": "string", "pattern": "^[0-9]+$" },
+                  "type": { "type": "string", "enum": ["retweeted", "quoted", "replied_to"] }
+                }
+              }
+            },
+            "geo": {
+              "description": "Geo metadata (place_id and/or coordinates).",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "withheld": {
+              "description": "Withholding details when applicable.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "public_metrics": {
+              "description": "Snapshot metrics.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "non_public_metrics": {
+              "description": "May require user-context auth. Store as-is.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "organic_metrics": {
+              "description": "May require user-context auth. Store as-is.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "promoted_metrics": {
+              "description": "May require ads context. Store as-is.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "note_tweet": {
+              "description": "Long-form post payload. Store as-is.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "article": {
+              "description": "Article payload when present. Store as-is.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "media_metadata": {
+              "description": "Media metadata when present. Store as-is.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "display_text_range": {
+              "type": "array",
+              "items": { "type": "integer" },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "scopes": {
+              "description": "Scopes metadata when present. Store as-is.",
+              "type": "object",
+              "additionalProperties": true
+            },
+            "suggested_source_links": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true }
+            },
+            "suggested_source_links_with_counts": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true }
+            }
+          }
+        },
+        "includes": {
+          "description": "Expanded objects returned when using expansions.",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "users": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true, "required": ["id"] }
+            },
+            "media": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true, "required": ["media_key"] }
+            },
+            "polls": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true, "required": ["id"] }
+            },
+            "places": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true, "required": ["id"] }
+            },
+            "tweets": {
+              "description": "Expanded referenced tweets (e.g., quoted tweet).",
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true, "required": ["id"] }
+            }
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": true }
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}
