@@ -17,8 +17,9 @@ other undesirable content.
 
 ## Data
 See `LABELS.md` for labeling rules and `data/sample.jsonl` for the data shape.
-Start with a small hand-labeled set, then expand using weak labels from
-scam-domain lists and manual review.
+Dataset creation is AI-first: use AI models to label crypto scams at scale and
+source `ai_reply` candidates by searching X for “AI reply”. Store provenance
+for every sample (platform, source id/url, timestamp).
 
 ## Local-first
 No network calls required for classification. Models should run on CPU.

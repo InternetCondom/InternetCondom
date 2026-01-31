@@ -29,19 +29,21 @@ This includes:
 - Non-crypto content.
 
 ## Labeling rules
-1) When unsure, default to `clean` and mark for review.
-2) Only label `crypto_scam` when there is clear theft or phishing intent.
-3) Only label `ai_reply` when there are strong stylistic cues.
+1) Only label `crypto_scam` when there is clear theft or phishing intent.
+2) Only label `ai_reply` when there are strong stylistic cues.
+3) Everything else is `clean`.
 
 ## Data shape
 Each record is JSONL with at minimum:
 - `id`: unique string
-- `source`: x | discord | web | dm | other
+- `platform`: x | discord | web | dm | other
+- `source_id`: platform-native id (tweet id, message id, etc.)
+- `source_url`: canonical URL when available
+- `collected_at`: ISO timestamp
 - `text`: raw text
 - `label`: crypto_scam | ai_reply | clean
 
 Optional fields:
 - `urls`: extracted URLs
 - `addresses`: extracted wallet addresses
-- `needs_review`: true | false
 - `notes`: short rationale

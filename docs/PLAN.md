@@ -15,25 +15,24 @@ positives and user-adjustable thresholds.
 - No remote inference dependencies.
 
 ## Principles
-- Local-first: run on CPU without network calls.
-- Conservative: prioritize low false positives.
-- Transparent: surface reasons (rule hits, URL matches).
+- Local-first: run on CPU without network calls for inference.
+- Conservative thresholds: prioritize low false positives.
+- Provenance: store where each text came from.
 
 ## Roadmap
 ### Phase 0 — Definitions
 - Finalize labels and labeling rules.
-- Define minimum data schema (JSONL).
+- Define minimum data schema (JSONL) with provenance fields.
 - Decide user-adjustable thresholds and defaults.
 
-### Phase 1 — Rules + Heuristics
-- URL parsing + domain checks (scam lists).
-- Keyword/phrase heuristics (seed phrase, wallet connect, airdrop).
-- Basic address detection (optional).
-- Output rule hits as features + explanations.
+### Phase 1 — Data Sourcing (AI-first)
+- Use AI models to label crypto scam content at scale.
+- For `ai_reply`, source candidates by searching X for “AI reply”.
+- Store provenance for every record (platform, source id/url, timestamp).
 
 ### Phase 2 — Baseline ML (CPU)
 - TF-IDF + Logistic Regression (or Linear SVM).
-- Train on small hand-labeled set + weak labels from rules.
+- Train primarily on AI-labeled data.
 - Calibrate class thresholds to control false positives.
 
 ### Phase 3 — Model Upgrade (optional)
@@ -47,9 +46,9 @@ positives and user-adjustable thresholds.
 - Optional local daemon for integration.
 
 ## Data Strategy
-- Start with 200–500 hand-labeled samples per class.
-- Expand with weak labels (scam domains, phishing patterns).
-- Active learning: review highest-uncertainty samples.
+- Use AI models to label the bulk of the dataset.
+- Add `ai_reply` samples by searching X for “AI reply”.
+- Keep provenance fields for source tracking.
 
 ## Evaluation
 - Report precision/recall/F1 per class.
@@ -67,6 +66,6 @@ positives and user-adjustable thresholds.
 - Over-filtering if thresholds are too aggressive.
 
 ## Open Questions
-- Which scam lists to bundle locally?
+- Which AI models to use for labeling at scale?
 - How to version and update label data?
 - Do we need multilingual support in v0?
