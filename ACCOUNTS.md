@@ -5,6 +5,84 @@ Tracking accounts that serve as hubs for crypto scam activity, their ecosystems,
 
 ---
 
+## SCAM TICKER SYMBOLS ($CASHTAGS)
+
+Ticker symbols observed in scam posts. Searching these on X surfaces coordinated campaigns.
+
+### Drainer/Airdrop Scam Tokens (HIGH VALUE LEADS)
+| Ticker | Domain | Account(s) | Notes |
+|--------|--------|------------|-------|
+| $USOR | us-oil.cc | @ttdomarinho, @MariahEPayne, @catalkurt35, @PTirolo (verified!), @amanda_kaianee (verified!), @itryobaseball29, @Jods_brooo, @BadhonRoy13890 | Coordinated campaign, 18+ samples. Hub accounts post drainer link, amplifiers quote-tweet with 30+ cashtags |
+| $TULSA | tulsa.soldex.one, tulsa.solgrid.trade | @Dannynegty, @aogrescue, @KBlock_Chain | 10 samples |
+| $PENGUIN | penguinsol.live | @sandaaramandara | 13 samples |
+| $TRUST | intuition-systems.info | @tomdumoulin_eth | 4 samples |
+| $GWEI | ethgasfoundetion.org | @tomdumoulin_eth | Typo in domain! 4 samples |
+| $LINK | hub-chain.link | @tomdumoulin_eth | Fake Chainlink airdrop, 2 samples |
+| $COPPERINU | copperinudrop.lol | @0xDaonikko | 2 samples |
+| $MOLTBOOK | moltbookcoin.lol | @0xDaonikko, @tokenTr0ve, @crypticByteX | 5 samples |
+| $SOSO | sosovalue.com | @Soloemon2 | Referral spam, 2 samples |
+
+### Pump.fun / Meme Token Tickers
+| Ticker | Notes |
+|--------|-------|
+| $ELON | Elon-themed pump tokens, 5 samples |
+| $TURBO | 4 samples |
+| $HACHI | 3 samples |
+| $CLAW | Claw ecosystem tokens, 3 samples |
+| $FUJIDOGE | Japanese pump.fun, 1 sample |
+| $FARTCOIN, $FARTBOY | Meme tokens |
+| $EPSTEINZE, $WHITESTEIN | "Epstein" themed scam communities |
+| $GOLDFISH, $GOLDDOGE | Gold-themed pumps |
+
+### VIP Signal Spam Cashtags (search visibility gaming)
+These are legitimate token tickers used to spam searches:
+- $BTC, $ETH, $SOL, $DOGE, $XRP, $ADA (major coins)
+- $GUN, $FUN, $W, $RARE, $RATS, $ONDA, $GALA, $CC (altcoins)
+
+### Search Strategy
+1. Search obscure tickers ($USOR, $TULSA, $TRUST) → surfaces coordinated scam networks
+2. Combine with "airdrop" or "claim" → higher precision
+3. Check account networks pushing same ticker
+
+---
+
+## SECURITY RESEARCHER ACCOUNTS (SOURCES)
+
+Accounts that post breach/scam alerts. Their posts are **clean/educational**, but useful for:
+1. Extracting IOCs (wallet addresses, domains)
+2. Finding scammers in reply sections (recovery scams target victims)
+3. Named threat actors for blocklists
+
+| Account | Followers | Focus | Best Use | Rating |
+|---------|-----------|-------|----------|--------|
+| **@zachxbt** | 945K | Deep attribution investigations (named actors, $M amounts) | IOCs, threat actor names, check replies | ⭐⭐⭐ |
+| **@realScamSniffer** | ~150K | Phishing/drainer alerts | Check "Show probable spam" in replies | ⭐⭐ |
+| **@CertiKAlert** | 68K | Real-time breach alerts with wallet addresses | Extract IOCs, protocol names | ⭐⭐⭐ |
+| **@PeckShieldAlert** | 94.2K | Aggregated breach stats, cites other researchers | Annual stats, check replies | ⭐⭐ |
+| **@SlowMist_Team** | 88K | Chinese security firm, Crypto Asset Tracing Handbook | Educational/reference, @MistTrack_io for tracing | ⭐⭐ |
+| **@wallet_guard** | 56K | Wallet security (MetaMask integrated) | ⚠️ SUNSETTING Mar 2025, see @_SEAL_Org | ⭐ |
+| **@hexagate_** | 4.6K | Smart contract exploit detection | Acquired by @Chainalysis, see @blockaid_ | ⭐⭐ |
+| **@blockthreat** | 5.2K | Weekly newsletter digest of all incidents | Historical reference, newsletter.blockthreat.io | ⭐⭐ |
+| **@RevokeCash** | 84.2K | Token approval management, scam awareness | Educational content, revoke.cash | ⭐⭐ |
+
+### Related Accounts Discovered
+| Account | Focus |
+|---------|-------|
+| **@_SEAL_Org** | Security Alliance - real-time phishing defense network |
+| **@MistTrack_io** | SlowMist's tracing tool |
+| **@blockaid_** | Real-time threat detection |
+| **@HypernativeLabs** | DeFi security monitoring |
+| **@Chainalysis** | Blockchain analytics (owns Hexagate) |
+| **@AnChainAI** | AI-powered blockchain security |
+
+### Key Insight
+Security researcher posts are **not scam content** — they're warnings. But they attract scammers in replies who target victims seeking help. Use "Show probable spam" button on X to reveal hidden scam replies.
+
+### Notes
+- **@revaboris** — account doesn't exist (may have been suspended/deleted)
+
+---
+
 ## BASE CHAIN ECOSYSTEM
 
 ### @bankrbot
@@ -131,14 +209,52 @@ Tracking accounts that serve as hubs for crypto scam activity, their ecosystems,
 - Often impersonate legitimate projects
 - Hub accounts: TBD
 
+### WhatsApp Stock Signal Scam Network (NEW - Meme Coin Tag Spam)
+- **Pattern**: AI-generated "stock analysis" praise → WhatsApp link → "Send 'stocks' to get them for free"
+- **Hashtag gaming**: Uses #DOGE, #SHIB, #LDO, #AVAX to hijack meme coin searches
+- **Cashtag spam**: Legitimate stock tickers ($META, $TSLA, $JPM) for search visibility
+- **Phone numbers (2 shared across network)**:
+  - `+1 (213) 462-6461` — @murli_bhai, @Dilipmakwana197, @Abhisek93371673, @pkallappa01, @VimalSi30944018, @Manoran05401242
+  - `+1 (303) 419-5364` — @KAyyappa20, @KandilalK, @AyanAcharya5, @Riteshvish55681, @VivekKu83554512, @Muskaan66202721, @Devbrat06653615, @padaliya_hitesh
+- **Accounts (14 documented)**:
+  | Handle | Phone | Sample ID |
+  |--------|-------|-----------|
+  | @Manoran05401242 | +12134626461 | x_0502 |
+  | @Riteshvish55681 | +13034195364 | x_0503 |
+  | @VimalSi30944018 | +12134626461 | x_0504 |
+  | @VivekKu83554512 | +13034195364 | x_0505 |
+  | @Devbrat06653615 | +13034195364 | x_0506 |
+  | @Muskaan66202721 | +13034195364 | x_0507 |
+  | @padaliya_hitesh | +13034195364 | x_0508 |
+  | @KAyyappa20 | +13034195364 | x_0509 |
+  | @murli_bhai | +12134626461 | x_0510 |
+  | @Dilipmakwana197 | +12134626461 | x_0511 |
+  | @KandilalK | +13034195364 | x_0512 |
+  | @Abhisek93371673 | +12134626461 | x_0513 |
+  | @pkallappa01 | +12134626461 | x_0514 |
+  | @AyanAcharya5 | +13034195364 | x_0515 |
+- **Samples collected**: 14 (x_0502 to x_0515)
+- **Notes**: Classic advance-fee fraud — victims DM WhatsApp, get pitched fake stock/crypto signals
+
 ### Recovery Scams (Advance-Fee Fraud)
 - Pattern: Spam targeting scam victims, "DM me for assistance in recovering your funds"
 - Uses hashtags: #CryptoRecovery, #CryptoScam, #[ScamPlatformName]Scam
 - Coordinated campaigns: Multiple accounts spam identical template about same "scam platform" (e.g., Bitfiz.net)
-- Hub accounts:
+- **Hub accounts**:
   - **@Fante_ni** ("Coby Forensic 🕵️‍♂️ & Crypto Recovery") — 2,774 followers — high-volume spam
   - **@Mr_CThru** ("Chris_Xevi||CryptoRecovery expert") — 2,669 followers — coordinated template spam
-- Samples collected: 2 (x_0371-x_0372)
+  - **@tao_eliana** ("Philip Higman ~ Crypto Recovery") — coordinated network
+  - **@Vincent_plr** ("Royce Vincent") — coordinated network
+  - **@_iGoByEbo** ("Sli Shady Crypto Recovery Expert") — ironically honest name!
+  - **@FrederickGLC** ("Frederick Gonzalez") — multiple samples in network
+  - **@MarkEricCr0nqt** ("Mark Eric ~ Crypto Recovery") — XYZverse warning bait
+  - **@LayTeaci** ("Robert_Mason||Cryptorecovery expert") — SERIAL SCAMMER, 5+ samples in 1 hour
+    - Platform hashtags: #VaultCapital, #Acmexpe, #Gelvixinvest, #Diphaswengfin, #heritageprofit
+    - Domain: tgexnode.com
+  - **@gustaborecalde** ("Michael Bratton || Asset Recovery") — SERIAL SCAMMER, 5+ samples in 1 hour
+    - Platform hashtags: #SonnenAfinitor, #ImpetuValtrix, #DonTradezip, #FrameAvageLab, #ArgentoLuxeron, #GiustoWex, #EstableCorexis, #FuturixBitport
+- **Pattern analysis**: All use invented/obscure platform names as hashtags to poison search results. Victims searching for platform legitimacy find these "warnings" and DM for help.
+- Samples collected: 15+ (x_0371-x_0372, x_0475-x_0487)
 - Notes: These are scams targeting previous scam victims - they charge upfront "recovery fees" and never deliver
 
 ---
@@ -159,16 +275,18 @@ Tracking accounts that serve as hubs for crypto scam activity, their ecosystems,
 
 | Category | Target | Current | % |
 |----------|--------|---------|---|
-| Token deployment (bankrbot) | 500 | ~250 | 50% |
-| Airdrop scams | 500 | ~20 | 4% |
-| DM engagement bots | 500 | 0 | 0% |
-| Wallet drainer/phishing | 500 | 0 | 0% |
-| **Total Scam** | **2000** | **299** | **15%** |
+| Token deployment (bankrbot) | 500 | ~253 | 50% |
+| Airdrop scams | 500 | ~30 | 6% |
+| Recovery scams | 300 | ~35 | 12% |
+| VIP signal groups | 200 | ~10 | 5% |
+| DM engagement bots | 300 | ~6 | 2% |
+| Wallet drainer/phishing | 200 | ~5 | 2.5% |
+| **Total Scam** | **2000** | **375** | **18.75%** |
 | Tech discussions | 300 | ~70 | 23% |
-| Casual conversation | 300 | ~10 | 3% |
-| Legit crypto | 200 | ~10 | 5% |
-| Multilingual | 200 | ~15 | 7% |
-| **Total Clean** | **1000** | **91** | **9%** |
+| Casual conversation | 300 | ~15 | 5% |
+| Legit crypto | 200 | ~25 | 12.5% |
+| Multilingual | 200 | ~15 | 7.5% |
+| **Total Clean** | **1000** | **125** | **12.5%** |
 
 ---
 
@@ -186,3 +304,50 @@ Tracking accounts that serve as hubs for crypto scam activity, their ecosystems,
 - Added follower counts for key hubs (ttdomarinho, MariahEPayne, catalkurt35, 0xDaonikko, tokenTr0ve, Dannynegty, aogrescue, KBlock_Chain, Fante_ni, Mr_CThru, Soloemon2)
 - Fixed bad IDs for x_0381 and x_0384
 - Next ID: x_0392
+
+### 2026-02-01 10:25 UTC - Session 4: Serial scammers + recovery scam network
+- Total now: 445 (331 scam, 113 clean)
+- **New serial scammer hub**: @tomdumoulin_eth
+  - Domains: intuition-systems.info/claim ($TRUST), hub-chain.link/rewards ($LINK)
+  - High engagement (28-29 RT, 118-126 likes) - likely amplifier network
+- **New airdrop scam hub**: @sandaaramandara (verified!)
+  - Domain: airdrop.penguinsol.live ($PENGUIN)
+  - 8 RT, 58 likes
+- **Recovery scam network discovered** (all posted ~32-33 min apart - coordinated):
+  - @tao_eliana (Philip Higman ~ Crypto Recovery)
+  - @Vincent_plr (Royce Vincent)
+  - @_iGoByEbo (Sli Shady Crypto Recovery Expert - ironically honest!)
+  - @FrederickGLC (Frederick Gonzalez)
+  - Pattern: Same template structure, commas as separators, generic platform warnings (#Pairvex, #cortexdlt, #Blockwave, #AccGn), DM bait
+- **DM engagement scam bots** (verified accounts spamming identical templates):
+  - @CryptoKing_2020 (THE CRYPTO KING) — "Your Project really got me Excited 🤑 Follow me & DM Me Please"
+  - @faveecryptoo (Fave Crypto) — "dm me or follow me back"
+  - @MotherOfCrypto_ (Mother Of Crypto) — "moon plan" + "DM me"
+  - @CryptoChad003 (Crypto Chad) — pump.fun CA spam
+- **moltbookcoin.lol network** (coordinated same-drainer campaign):
+  - @0xDaonikko, @tokenTr0ve, @crypticByteX — all pushing moltbookcoin.lol/claim
+- **@tomdumoulin_eth** — SERIAL SCAMMER with 4+ drainer domains:
+  - intuition-systems.info/claim ($TRUST)
+  - hub-chain.link/rewards ($LINK)  
+  - ethgasfoundetion.org/token ($GWEI) — note typo!
+  - High engagement (28-38 RT, 118-133 likes) — has amplifier network
+
+### 2026-02-01 10:55 UTC - Session 5: Recovery scam goldmine + VIP signals
+- Total now: 501 (375 scam, 125 clean) **🎉 500+ MILESTONE**
+- **Search query success**: "DM for recovery" OR "recover stolen crypto" OR "wallet recovery expert"
+- **New serial recovery scammers discovered**:
+  - **@MarkEricCr0nqt** ("Mark Eric ~ Crypto Recovery") — fake scam alert + DM bait
+  - **@LayTeaci** ("Robert_Mason||Cryptorecovery expert") — 5 samples in 1 hour
+  - **@gustaborecalde** ("Michael Bratton || Asset Recovery") — 5 samples in 1 hour
+  - **@juanpi_s_c** ("Patrick Coman") — unusual ",,,,," separator pattern (automation template)
+  - **@IRONGATE05** ("IRON GATE FUNDS RECOVERY" - verified!) — "no upfront payment" angle
+  - **@CharlenePtns** ("Charles_Wills") — Torpex + Elon Musk impersonation targeting
+- **Pattern**: Create fake platform names as hashtags (e.g., #Gelvixinvest, #SonnenAfinitor), spam warnings, harvest DMs from victims searching for platform reviews
+- **Coordinated hashtag sharing**: @Fante_ni and @juanpi_s_c use identical platform hashtags (#SonnenAfinitor, #ImpetuValtrix, #DonTradezip) — same network
+- **VIP Signal Group scams discovered**:
+  - **@WealthSignal888** — DM-based VIP group recruitment
+  - **@spideycrypt** (verified!) — TG @spideyadmin1, urgency "closes February 8!"
+  - **@_callmebuchi** — fake testimonial shill boosting @heis_samueljay
+  - **@OderaI72943** ("JACKSON WILLIAMS") — +277% profit claims, TG link, cashtag spam
+- **Security researcher source strategy**: ScamSniffer post had spam replies hidden under "Show probable spam" button — X auto-filters scam replies!
+- Next ID: x_0502
