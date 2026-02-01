@@ -17,11 +17,18 @@ other undesirable content.
 
 ## Data
 See `LABELS.md` for labeling rules and `data/sample.jsonl` for the data shape.
+See `docs/DATA_MODEL.md` for schemas and storage patterns.
+
 Dataset creation is AI-first: use AI models to label crypto scams at scale and
-source `ai_reply` candidates by searching X for “AI reply”. Ingestion is done
+source `ai_reply` candidates by searching X for "AI reply". Ingestion is done
 entirely via OpenClaw (no scripts in this repo), using its provided browser to
 collect everything. Store provenance for every sample (platform, source id/url,
 timestamp). Preserve the original text and URLs without lossy transformations.
+
+**Note:** We collect data via UI scraping (browser automation), not the X API.
+This means we only capture fields visible in the DOM. See `docs/DATA_MODEL.md`
+for details on what fields are available and what's missing. Fill in what you
+can; partial records are fine for ML training.
 
 ## Local-first
 No network calls required for classification. Models should run on CPU.

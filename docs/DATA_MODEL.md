@@ -9,6 +9,56 @@ We use a **two-layer storage approach**:
 1. **Layer 1 (lossless)**: Raw API responses stored exactly as received
 2. **Layer 2 (labeled)**: Lightweight labeled samples for ML training
 
+## Data Collection Methods
+
+### Browser/UI Scraping (primary method)
+
+Most data is collected via OpenClaw's browser automation, scraping the X web UI.
+
+**Limitations:**
+- We only get fields visible in the DOM (no full API response)
+- Some metadata is unavailable (e.g., `edit_controls`, `non_public_metrics`)
+- Timestamps may need parsing from relative strings ("10h ago")
+
+**What we CAN reliably get from UI:**
+- `text` (post content)
+- `author_id` / `username` (from profile link)
+- `source_id` (post ID from URL)
+- `source_url` (canonical URL)
+- Basic metrics (likes, replies, reposts) — as visible at scrape time
+- `referenced_tweets` (reply-to relationships from thread view)
+- Mentions, hashtags, URLs (from rendered text)
+
+**What we typically CANNOT get from UI:**
+- `created_at` (exact timestamp — often only relative like "10h")
+- `edit_history_tweet_ids`
+- `context_annotations`
+- `lang` (language detection)
+- Full `entities` structure
+- `non_public_metrics`, `organic_metrics`
+
+### X API (when available)
+
+If you have API access, use the full snapshot schema to preserve everything.
+
+## Filling What We Can
+
+**For UI-scraped data**: fill in the fields you have, leave others out or null. The schemas use `additionalProperties: true` and minimal `required` fields to accommodate partial data.
+
+**Minimum viable record (labeled sample):**
+```json
+{
+  "id": "x_0001",
+  "platform": "x",
+  "source_id": "2017528384448856158",
+  "collected_at": "2026-01-31T19:50:00Z",
+  "text": "@bankrbot deploy token...",
+  "label": "crypto_scam"
+}
+```
+
+Even without full API data, this is enough for ML training.
+
 ## Schemas
 
 All JSON schemas are in `docs/schemas/`:
