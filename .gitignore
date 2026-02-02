@@ -20,3 +20,4 @@ scrape-*.mjs
 models/*.bin
 models/*.vec
 package*.json
+models/reduced/
