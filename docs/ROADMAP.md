@@ -44,12 +44,18 @@ Results in models/reduced/reduction_results.csv
 **Note**: `qout=True` variants fail on this model (matrix too small for quantization).
 
 ### Key findings
+- Reduction pipeline is complete and repeatable; the grid run captured size/precision/recall/FPR at threshold 0.90
 - Aggressive vocab pruning (cutoff) dramatically reduces size with modest accuracy loss
-- **quant-cutoff10k (690KB)** is the sweet spot: smallest FPR among reduced models
-- Interestingly, 10k cutoff has *lower* FPR than larger cutoffs (extra vocab may cause false positives)
-- May need threshold >0.90 to hit FPR <5% target
+- **quant-cutoff10k (690KB)** is the current best size/FPR tradeoff at **7.1% FPR**, while keeping recall ~0.80
+- 10k cutoff has *lower* FPR than larger cutoffs (extra vocab may be introducing false positives)
+- Current FPR still exceeds the <5% target at threshold 0.90, so tuning is required
 
 ## Parallel work items
 - Add clean crypto posts with scammy keywords to reduce false positives
 - Validate WASM compatibility for top candidates
 - Decide acceptance criteria for production promotion
+
+## Next Steps
+1. Threshold tuning to hit <5% FPR
+2. WASM integration testing with `quant-cutoff10k.ftz`
+3. Consider if retraining with smaller dim would help
