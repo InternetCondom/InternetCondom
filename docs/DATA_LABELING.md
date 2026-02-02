@@ -68,6 +68,30 @@ git commit -m "Manual relabel: X entries clean→crypto, Y entries clean→crypt
 |--------|------|---------|
 | `relabel_crypto.py` | Read-only | Suggest clean→crypto based on keywords/patterns |
 | `mine_errors.py` | Read-only | Extract false positives/negatives from model |
+| `manual_relabel.py` | Read-only (--apply to write) | Apply reviewed label changes from a changes file |
+| `check_integrity.py` | Read-only | Validate dataset integrity (unique IDs, valid labels, etc.) |
+| `fix_duplicate_ids.py` | Read-only (--apply to write) | Fix duplicate IDs by assigning unique suffixes |
+| `validate_data.sh` | Read-only | Quick validation for CI/pre-commit |
+
+## Integrity Checks
+
+Run before committing any data changes:
+```bash
+python scripts/check_integrity.py
+```
+
+Checks performed:
+- Valid JSON on every line
+- Required fields present (id, label, text)
+- No duplicate IDs
+- Valid label values (clean, crypto, crypto_scam, ai_reply)
+- No empty text
+- ID format consistency
+
+For CI/pre-commit:
+```bash
+./scripts/validate_data.sh
+```
 
 ## Anti-patterns
 
