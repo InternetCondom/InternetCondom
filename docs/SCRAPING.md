@@ -1,107 +1,74 @@
-# X Home-Feed Scraping (OpenClaw)
+# X Home-Feed Scraping (OpenClaw Browser Automation)
 
-## Purpose and scope
-Collect posts from the X home feed via the OpenClaw-managed browser and export
-JSONL records for downstream labeling. This doc covers the manual, in-browser
-collection flow only.
+## Purpose
+Collect posts from the X home feed via OpenClaw's Chrome relay and append JSONL
+records to `data/sample.jsonl` for downstream labeling.
 
 ## Prerequisites
-- OpenClaw-managed browser is running.
-- You are logged in to X in that browser session.
+- OpenClaw running with Chrome extension relay configured
+- Logged into X in your Chrome browser
+- Chrome extension relay tab attached (click the OpenClaw Browser Relay toolbar
+  button on the X tab - badge should show ON)
 
-## Step-by-step flow
-1. Open `https://x.com/home`.
-2. Inject the JS collector snippet (below) in the devtools console.
-3. Scroll slowly and wait for more posts to load.
-4. Let the collector run; it will dedupe by post id.
-5. Export the collected records and append them to `data/sample.jsonl`.
+## How it works
+OpenClaw connects to your existing Chrome session via the Browser Relay extension.
+It injects JS to collect tweets, scrolls to load more, dedupes by tweet ID, and
+appends results to the dataset.
 
-## Expected fields
-Each JSONL line must include:
-- `id`: local unique id for the dataset (e.g., `x_home_000001`).
-- `text`: post text as shown in the UI.
-- `source`: string tag for provenance (e.g., `x_home`).
-- `url`: canonical post URL.
-- `collected_at`: ISO timestamp.
-- `labels`: array of labels (use `[]` at collection time).
+## Scraping flow
+1. Navigate to `https://x.com/home` in Chrome
+2. Attach the tab via the OpenClaw Browser Relay extension
+3. OpenClaw injects collection JS and scrolls to gather tweets
+4. Tweets are deduplicated against existing IDs in `data/sample.jsonl`
+5. New records are appended with empty labels for later annotation
 
-## Example JS: collect + dedupe
+## JS selectors used
 ```js
-// In the browser console on https://x.com/home
-(() => {
-  const state = window.__xHomeCollector || {
-    seen: new Set(),
-    rows: []
-  };
+// Tweet container
+document.querySelectorAll('[data-testid="tweet"]')
 
-  function nowIso() {
-    return new Date().toISOString();
-  }
+// Tweet text
+el.querySelector('[data-testid="tweetText"]')?.innerText
 
-  function canonicalUrl(el) {
-    const link = el.querySelector('a[href*="/status/"]');
-    return link ? new URL(link.getAttribute('href'), location.origin).toString() : null;
-  }
-
-  function extractText(el) {
-    const textEl = el.querySelector('div[data-testid="tweetText"]');
-    return textEl ? textEl.innerText.trim() : "";
-  }
-
-  function collectOnce() {
-    const cards = document.querySelectorAll('article');
-    cards.forEach((card) => {
-      const url = canonicalUrl(card);
-      if (!url) return;
-      const id = url.split('/status/')[1]?.split('?')[0];
-      if (!id || state.seen.has(id)) return;
-
-      const text = extractText(card);
-      state.seen.add(id);
-      state.rows.push({
-        id,
-        text,
-        source: 'x_home',
-        url,
-        collected_at: nowIso(),
-        labels: []
-      });
-    });
-
-    window.__xHomeCollector = state;
-    return { total: state.rows.length, newSeen: state.seen.size };
-  }
-
-  // Run once now, then you can call window.__xHomeCollect() after more scrolling.
-  window.__xHomeCollect = collectOnce;
-  return collectOnce();
-})();
+// Tweet URL (extract ID from /status/...)
+el.querySelector('a[href*="/status/"]')?.href
 ```
 
-## Example JS: export JSONL
-```js
-(() => {
-  const state = window.__xHomeCollector;
-  if (!state || !state.rows.length) return "No rows collected.";
+## Output schema (minimal for unlabeled data)
+```json
+{"id": "x_1234567890", "text": "tweet text here", "labels": []}
+```
 
-  const jsonl = state.rows.map((r, i) => {
-    const padded = String(i + 1).padStart(6, '0');
-    const localId = `x_home_${padded}`;
-    return JSON.stringify({
-      id: localId,
-      text: r.text,
-      source: r.source,
-      url: r.url,
-      collected_at: r.collected_at,
-      labels: r.labels
-    });
-  }).join('\n');
+Where:
+- `id`: `x_` prefix + tweet ID (numeric string from URL)
+- `text`: full tweet text, preserved exactly
+- `labels`: empty array `[]` at collection time
 
-  // Copy JSONL to clipboard for appending to data/sample.jsonl
-  navigator.clipboard.writeText(jsonl);
-  return `Copied ${state.rows.length} lines to clipboard.`;
-})();
+## Full schema (for labeled data)
+When labeling or enriching, the full schema from `DATA_SOURCES.md` applies:
+```json
+{
+  "id": "x_1234567890",
+  "platform": "x",
+  "source_id": "1234567890",
+  "source_url": "https://x.com/user/status/1234567890",
+  "collected_at": "2026-02-03T20:00:00Z",
+  "text": "tweet text",
+  "labels": ["crypto"],
+  "urls": [],
+  "addresses": [],
+  "notes": ""
+}
 ```
 
 ## Output location
-Append the exported JSONL lines to `data/sample.jsonl`.
+Append to: `data/sample.jsonl`
+
+## Deduplication
+Before appending, check existing IDs in `data/sample.jsonl` to avoid duplicates.
+The tweet ID (numeric part) is the dedup key.
+
+## Scroll parameters (typical)
+- Scroll increment: ~2000px
+- Delay between scrolls: ~1.5s
+- This loads ~20-30 new tweets per scroll cycle
