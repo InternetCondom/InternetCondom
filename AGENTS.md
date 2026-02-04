@@ -162,3 +162,65 @@ Key rules:
 - Filenames: `SCREAMING_SNAKE_CASE.md`
 - Daily logs: `docs/logs/YYYY-MM-DD.md` with YAML frontmatter
 - No hyphens in doc filenames (use underscores)
+
+---
+
+## Daily Logs (SimpleLog)
+
+Use SimpleLog for daily logs. The spec lives at `docs/SIMPLELOG_SPEC.md`.
+
+### Where logs live
+
+- Default location: `docs/logs/YYYY-MM-DD.md`.
+- The CLI writes to `<repo-root>/docs/logs/` by default when inside a git repo.
+- You can set a shared default in `simpledoc.json` and override locally in `.simpledoc.local.json` (see `docs/SIMPLEDOC_CONFIG_SPEC.md`).
+
+### Create a daily log entry (recommended)
+
+Use the CLI to create the file and append entries:
+
+```bash
+simpledoc log "Entry text here"
+```
+
+Notes:
+
+- The CLI creates the daily log file if missing, including required frontmatter.
+- It adds a new session section only when the threshold is exceeded (default 5 minutes).
+- It preserves the text you type and inserts a blank line before each new entry.
+
+### Multiline entries
+
+Pipe or heredoc input (stdin) for multiline entries:
+
+```bash
+cat <<'EOF' | simpledoc log
+Multiline entry.
+- line two
+- line three
+EOF
+```
+
+You can also use `--stdin` explicitly:
+
+```bash
+simpledoc log --stdin <<'EOF'
+Another multiline entry.
+EOF
+```
+
+### Manual edits (if needed)
+
+- Keep the YAML frontmatter intact (`title`, `author`, `date`, `tz`, `created`, optional `updated`).
+- Ensure a blank line separates entries.
+- Session sections must be `## HH:MM` (local time of the first entry in that section).
+
+### Ongoing logging (agent behavior)
+
+Once this skill is active in a repo, the agent SHOULD log anything worth noting as it goes. This includes:
+
+- Significant changes, decisions, discoveries, tradeoffs, and assumptions.
+- Ongoing progress and small but real steps (changes, commands, tests, doc updates).
+- Errors, failures, workarounds, and clarifications.
+
+Log each entry after completing the step or realizing the insight.
