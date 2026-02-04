@@ -1,15 +1,18 @@
 # Data Sources (AI-first)
 
 ## Goal
+
 Source text data for `scam`, `crypto`, `ai_generated_reply`, `promo`, and `clean`, with provenance
 stored for every record and without losing important information.
 
 ## Primary sources
+
 - X (Twitter): posts and replies.
 - Discord: DMs and server messages.
 - Web: site content or scraped text you control.
 
 ## Ingestion
+
 - Use your existing OpenClaw instance to collect posts via its provided browser
   and write JSONL records in the schema below.
 - OpenClaw is the only ingestion path (no scripts in this repo).
@@ -17,6 +20,7 @@ stored for every record and without losing important information.
 - X home-feed scraping flow: see `docs/SCRAPING.md`.
 
 ## OpenClaw JSONL instruction block (copy/paste)
+
 ```
 Collect posts from X using your queries. For each post, output one JSONL line
 with the required schema fields:
@@ -30,26 +34,31 @@ Write to: data/raw/x_openclaw_YYYYMMDD.jsonl
 ```
 
 ## AI-first labeling workflow
-1) Collect raw text + metadata.
-2) Use AI models to label `scam` at scale.
-3) Source `ai_generated_reply` candidates by searching X for “AI reply”.
-4) Collect non-crypto promo/ads and label as `promo`.
-5) Keep everything else as `clean` unless the AI labels it otherwise.
+
+1. Collect raw text + metadata.
+2. Use AI models to label `scam` at scale.
+3. Source `ai_generated_reply` candidates by searching X for “AI reply”.
+4. Collect non-crypto promo/ads and label as `promo`.
+5. Keep everything else as `clean` unless the AI labels it otherwise.
 
 ## Data fidelity (do not lose information)
+
 - Preserve original text exactly (including emojis, casing, punctuation).
 - Keep original URLs; do not shorten or normalize them.
 - Store the full text even if it is long; do not truncate.
 - Avoid lossy transformations (strip HTML only if you also store raw).
 
 ## Provenance fields (required)
+
 - `platform`: x | discord | web | dm | other
 - `source_id`: platform-native id (tweet id, message id, etc.)
 - `source_url`: canonical URL when available
 - `collected_at`: ISO timestamp
 
 ## JSONL schema (recap)
+
 Each record:
+
 ```
 {
   "id": "x_0001",
@@ -66,6 +75,7 @@ Each record:
 ```
 
 Multi-label example:
+
 ```
 {
   "id": "x_0002",
@@ -79,11 +89,13 @@ Multi-label example:
 ```
 
 ## Sampling strategy
+
 - Ensure class balance across `scam`, `crypto`, `ai_generated_reply`, `promo`, and `clean`.
 - Use multiple labels when the attributes are orthogonal (e.g. `crypto` + `promo`).
 - Deduplicate near-identical text.
 - Keep a separate holdout split for evaluation.
 
 ## Output location
+
 - Store curated datasets in `data/` as JSONL.
 - Keep raw dumps in `data/raw/` (optional).

@@ -73,7 +73,9 @@ def write_jsonl(samples: list[dict], path: Path):
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare HF dataset")
-    parser.add_argument("--test-ratio", type=float, default=0.2, help="Test split ratio")
+    parser.add_argument(
+        "--test-ratio", type=float, default=0.2, help="Test split ratio"
+    )
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args()
 

@@ -16,11 +16,13 @@ We use a **two-layer storage approach**:
 Most data is collected via OpenClaw's browser automation, scraping the X web UI.
 
 **Limitations:**
+
 - We only get fields visible in the DOM (no full API response)
 - Some metadata is unavailable (e.g., `edit_controls`, `non_public_metrics`)
 - Timestamps may need parsing from relative strings ("10h ago")
 
 **What we CAN reliably get from UI:**
+
 - `text` (post content)
 - `author_id` / `username` (from profile link)
 - `source_id` (post ID from URL)
@@ -30,6 +32,7 @@ Most data is collected via OpenClaw's browser automation, scraping the X web UI.
 - Mentions, hashtags, URLs (from rendered text)
 
 **What we typically CANNOT get from UI:**
+
 - `created_at` (exact timestamp — often only relative like "10h")
 - `edit_history_tweet_ids`
 - `context_annotations`
@@ -46,6 +49,7 @@ If you have API access, use the full snapshot schema to preserve everything.
 **For UI-scraped data**: fill in the fields you have, leave others out or null. The schemas use `additionalProperties: true` and minimal `required` fields to accommodate partial data.
 
 **Minimum viable record (labeled sample):**
+
 ```json
 {
   "id": "x_0001",
@@ -63,10 +67,10 @@ Even without full API data, this is enough for ML training.
 
 All JSON schemas are in `docs/schemas/`:
 
-| Schema | Description | Usage |
-|--------|-------------|-------|
+| Schema                        | Description                      | Usage              |
+| ----------------------------- | -------------------------------- | ------------------ |
 | `x-post-snapshot.schema.json` | Lossless X API v2 post snapshots | Raw data ingestion |
-| (LABELS.md) | Labeled sample format | ML training data |
+| (LABELS.md)                   | Labeled sample format            | ML training data   |
 
 ## Layer 1: X Post Snapshots (Lossless)
 
@@ -82,6 +86,7 @@ For full data preservation, store the complete API response plus metadata.
 ### Schema: `x-post-snapshot.schema.json`
 
 Required fields:
+
 - `snapshot_id`: Unique identifier for this snapshot
 - `retrieved_at`: ISO 8601 timestamp
 - `endpoint`: X API endpoint used (e.g., `/2/tweets/:id`)
@@ -90,6 +95,7 @@ Required fields:
 - `raw`: Full API response body
 
 Optional:
+
 - `auth_context`: `app_only` or `user_context` + user_id
 
 ### Example
@@ -144,15 +150,16 @@ For ML training, we use a simpler JSONL format (see `LABELS.md`).
 
 ### Labels
 
-| Label | Description |
-|-------|-------------|
-| `scam` | Direct theft/phishing attempts (seed phrases, wallet drainers, fake claims) |
-| `crypto` | Legitimate crypto discussion, hype, or announcements |
-| `ai_generated_reply` | Automated/LLM-generated replies (generic, template-like) |
-| `promo` | Non-crypto promotional/advertising copy |
-| `clean` | Everything else |
+| Label                | Description                                                                 |
+| -------------------- | --------------------------------------------------------------------------- |
+| `scam`               | Direct theft/phishing attempts (seed phrases, wallet drainers, fake claims) |
+| `crypto`             | Legitimate crypto discussion, hype, or announcements                        |
+| `ai_generated_reply` | Automated/LLM-generated replies (generic, template-like)                    |
+| `promo`              | Non-crypto promotional/advertising copy                                     |
+| `clean`              | Everything else                                                             |
 
 Multi-label notes:
+
 - Use `labels: []` with one or more values.
 - `clean` should be exclusive (no other labels).
 

@@ -103,9 +103,15 @@ def count_labels(rows: list[tuple[list[str], str]]) -> dict[str, int]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare fastText data")
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT, help="Input JSONL file")
-    parser.add_argument("--train-out", type=Path, default=DEFAULT_TRAIN, help="Train output file")
-    parser.add_argument("--valid-out", type=Path, default=DEFAULT_VALID, help="Validation output file")
+    parser.add_argument(
+        "--input", type=Path, default=DEFAULT_INPUT, help="Input JSONL file"
+    )
+    parser.add_argument(
+        "--train-out", type=Path, default=DEFAULT_TRAIN, help="Train output file"
+    )
+    parser.add_argument(
+        "--valid-out", type=Path, default=DEFAULT_VALID, help="Validation output file"
+    )
     parser.add_argument(
         "--hard-negatives",
         type=Path,
@@ -119,10 +125,18 @@ def main() -> None:
         help="Times to repeat each hard negative in training",
     )
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
-    parser.add_argument("--valid-ratio", type=float, default=0.2, help="Validation split ratio")
-    parser.add_argument("--strip-urls", action="store_true", help="Remove URLs from text")
-    parser.add_argument("--no-normalize", action="store_true", help="Disable Unicode normalization")
-    parser.add_argument("--no-lowercase", action="store_true", help="Disable lowercasing")
+    parser.add_argument(
+        "--valid-ratio", type=float, default=0.2, help="Validation split ratio"
+    )
+    parser.add_argument(
+        "--strip-urls", action="store_true", help="Remove URLs from text"
+    )
+    parser.add_argument(
+        "--no-normalize", action="store_true", help="Disable Unicode normalization"
+    )
+    parser.add_argument(
+        "--no-lowercase", action="store_true", help="Disable lowercasing"
+    )
     args = parser.parse_args()
     if args.hard_negatives_mult < 1:
         raise SystemExit("--hard-negatives-mult must be >= 1")

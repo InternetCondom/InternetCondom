@@ -76,9 +76,18 @@ def best_threshold_for_label(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL, help="Model file")
-    parser.add_argument("--data", type=Path, default=DEFAULT_DATA, help="Calibration data (fastText txt)")
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Output thresholds JSON")
-    parser.add_argument("--target-fpr", type=float, default=0.02, help="Target FPR per label")
+    parser.add_argument(
+        "--data",
+        type=Path,
+        default=DEFAULT_DATA,
+        help="Calibration data (fastText txt)",
+    )
+    parser.add_argument(
+        "--out", type=Path, default=DEFAULT_OUT, help="Output thresholds JSON"
+    )
+    parser.add_argument(
+        "--target-fpr", type=float, default=0.02, help="Target FPR per label"
+    )
     parser.add_argument(
         "--labels",
         type=str,
@@ -123,7 +132,10 @@ def main() -> None:
 
     stats_out: dict[str, dict[str, float]] = {}
     for label in label_list:
-        points = [(scores.get(label, 0.0), (label in labels)) for labels, scores in scored_rows]
+        points = [
+            (scores.get(label, 0.0), (label in labels))
+            for labels, scores in scored_rows
+        ]
         thr, fpr, recall, precision = best_threshold_for_label(points, args.target_fpr)
         thresholds[label] = float(thr)
         stats_out[label] = {
@@ -132,13 +144,7 @@ def main() -> None:
             "recall": float(recall),
             "precision": float(precision),
         }
-        print(
-            f"{label:10s} "
-            f"{thr:7.4f} "
-            f"{fpr:7.4f} "
-            f"{recall:7.4f} "
-            f"{precision:7.4f}"
-        )
+        print(f"{label:10s} {thr:7.4f} {fpr:7.4f} {recall:7.4f} {precision:7.4f}")
 
     payload = {
         "version": 1,

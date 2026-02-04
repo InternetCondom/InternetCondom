@@ -4,6 +4,7 @@ Local runnable models for filtering out crypto scam content, AI replies, and
 other undesirable content.
 
 ## Scope (v0)
+
 - Input: text content (DMs, posts, web text) with URL parsing.
 - Output: labels[] + confidence + optional reasons.
 - Classes: `scam`, `crypto`, `ai_generated_reply`, `promo`, `clean`.
@@ -11,17 +12,20 @@ other undesirable content.
 - Training note: you can cluster labels during training (merge into coarse super-classes) to improve performance, while keeping the dataset labels fine-grained.
 
 ## Pipeline (minimal)
-1) Parse text and extract URLs (and optionally wallet addresses).
-2) Rule features: scam domains, seed phrase / wallet-drainer phrases, etc.
-3) ML baseline: TF-IDF + Logistic Regression on CPU.
-4) Thresholding: per-class confidence cutoffs to keep false positives low.
+
+1. Parse text and extract URLs (and optionally wallet addresses).
+2. Rule features: scam domains, seed phrase / wallet-drainer phrases, etc.
+3. ML baseline: TF-IDF + Logistic Regression on CPU.
+4. Thresholding: per-class confidence cutoffs to keep false positives low.
 
 ## MVP fastText pipeline (Milestone A)
 
 Dependencies (Python):
+
 - fastText Python bindings: `fasttext-wheel`
 
 Quick start:
+
 ```
 make prepare
 make train
@@ -29,10 +33,12 @@ make eval
 ```
 
 Outputs:
+
 - `data/train.txt`, `data/valid.txt` (fastText format)
 - `models/scam_detector.bin` (trained model)
 
 If you do not have fastText installed, create a virtual environment and install:
+
 ```
 python -m venv .venv
 . .venv/bin/activate
@@ -40,6 +46,7 @@ python -m pip install fasttext-wheel
 ```
 
 ## Data
+
 See `docs/LABELS.md` for labeling rules and `data/sample.jsonl` for the data shape.
 See `docs/DATA_MODEL.md` for schemas and storage patterns.
 
@@ -56,15 +63,16 @@ can; partial records are fine for ML training.
 
 ## Documentation
 
-| Doc | Description |
-|-----|-------------|
-| [docs/PLAN.md](docs/PLAN.md) | Project roadmap and phases |
+| Doc                                                                  | Description                            |
+| -------------------------------------------------------------------- | -------------------------------------- |
+| [docs/PLAN.md](docs/PLAN.md)                                         | Project roadmap and phases             |
 | [docs/TRAINING_INFERENCE_STACK.md](docs/TRAINING_INFERENCE_STACK.md) | SOTA training & inference architecture |
-| [docs/DATA_MODEL.md](docs/DATA_MODEL.md) | Schemas and storage patterns |
-| [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) | Where to find data |
-| [docs/LABELS.md](docs/LABELS.md) | Labeling rules and definitions |
-| [docs/SOURCES.md](docs/SOURCES.md) | Source tracking |
-| [docs/ACCOUNTS.md](docs/ACCOUNTS.md) | Scam account registry |
+| [docs/DATA_MODEL.md](docs/DATA_MODEL.md)                             | Schemas and storage patterns           |
+| [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)                         | Where to find data                     |
+| [docs/LABELS.md](docs/LABELS.md)                                     | Labeling rules and definitions         |
+| [docs/SOURCES.md](docs/SOURCES.md)                                   | Source tracking                        |
+| [docs/ACCOUNTS.md](docs/ACCOUNTS.md)                                 | Scam account registry                  |
 
 ## Local-first
+
 No network calls required for classification. Models should run on CPU.

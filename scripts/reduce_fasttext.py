@@ -197,7 +197,9 @@ def run_spec(
     model = fasttext.load_model(str(model_path))
     if spec.pca_dim is not None:
         if ft_util is None or not hasattr(ft_util, "reduce_model"):
-            raise SystemExit("fasttext.util.reduce_model is not available; omit --pca-dims.")
+            raise SystemExit(
+                "fasttext.util.reduce_model is not available; omit --pca-dims."
+            )
         ft_util.reduce_model(model, spec.pca_dim)
 
     model.quantize(**spec.quant_args)
@@ -227,9 +229,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Reduce a fastText .bin model into smaller .ftz candidates"
     )
-    parser.add_argument("--model", type=Path, default=DEFAULT_MODEL, help="Reference .bin model")
-    parser.add_argument("--valid", type=Path, default=DEFAULT_VALID, help="Validation data file")
-    parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR, help="Output directory")
+    parser.add_argument(
+        "--model", type=Path, default=DEFAULT_MODEL, help="Reference .bin model"
+    )
+    parser.add_argument(
+        "--valid", type=Path, default=DEFAULT_VALID, help="Validation data file"
+    )
+    parser.add_argument(
+        "--out-dir", type=Path, default=DEFAULT_OUT_DIR, help="Output directory"
+    )
     parser.add_argument(
         "--results",
         type=Path,

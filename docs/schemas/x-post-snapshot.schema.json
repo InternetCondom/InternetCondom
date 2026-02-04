@@ -4,7 +4,14 @@
   "title": "X Post Snapshot (lossless)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["snapshot_id", "retrieved_at", "endpoint", "query", "post_id", "raw"],
+  "required": [
+    "snapshot_id",
+    "retrieved_at",
+    "endpoint",
+    "query",
+    "post_id",
+    "raw"
+  ],
   "properties": {
     "snapshot_id": {
       "description": "Unique identifier for this stored snapshot.",
@@ -109,7 +116,10 @@
                 "required": ["id", "type"],
                 "properties": {
                   "id": { "type": "string", "pattern": "^[0-9]+$" },
-                  "type": { "type": "string", "enum": ["retweeted", "quoted", "replied_to"] }
+                  "type": {
+                    "type": "string",
+                    "enum": ["retweeted", "quoted", "replied_to"]
+                  }
                 }
               }
             },
@@ -186,24 +196,44 @@
           "properties": {
             "users": {
               "type": "array",
-              "items": { "type": "object", "additionalProperties": true, "required": ["id"] }
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["id"]
+              }
             },
             "media": {
               "type": "array",
-              "items": { "type": "object", "additionalProperties": true, "required": ["media_key"] }
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["media_key"]
+              }
             },
             "polls": {
               "type": "array",
-              "items": { "type": "object", "additionalProperties": true, "required": ["id"] }
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["id"]
+              }
             },
             "places": {
               "type": "array",
-              "items": { "type": "object", "additionalProperties": true, "required": ["id"] }
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["id"]
+              }
             },
             "tweets": {
               "description": "Expanded referenced tweets (e.g., quoted tweet).",
               "type": "array",
-              "items": { "type": "object", "additionalProperties": true, "required": ["id"] }
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["id"]
+              }
             }
           }
         },

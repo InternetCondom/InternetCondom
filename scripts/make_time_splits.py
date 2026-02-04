@@ -62,8 +62,12 @@ def count_from_ratio(total: int, ratio: float) -> int:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Create time-based train/calib/holdout splits")
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT, help="Input JSONL file")
+    parser = argparse.ArgumentParser(
+        description="Create time-based train/calib/holdout splits"
+    )
+    parser.add_argument(
+        "--input", type=Path, default=DEFAULT_INPUT, help="Input JSONL file"
+    )
     parser.add_argument("--train-jsonl", type=Path, default=DEFAULT_TRAIN_JSONL)
     parser.add_argument("--calib-jsonl", type=Path, default=DEFAULT_CALIB_JSONL)
     parser.add_argument("--holdout-jsonl", type=Path, default=DEFAULT_HOLDOUT_JSONL)
@@ -73,9 +77,15 @@ def main() -> None:
     parser.add_argument("--meta-out", type=Path, default=DEFAULT_META)
     parser.add_argument("--holdout-ratio", type=float, default=0.1)
     parser.add_argument("--calib-ratio", type=float, default=0.1)
-    parser.add_argument("--strip-urls", action="store_true", help="Remove URLs from text")
-    parser.add_argument("--no-normalize", action="store_true", help="Disable Unicode normalization")
-    parser.add_argument("--no-lowercase", action="store_true", help="Disable lowercasing")
+    parser.add_argument(
+        "--strip-urls", action="store_true", help="Remove URLs from text"
+    )
+    parser.add_argument(
+        "--no-normalize", action="store_true", help="Disable Unicode normalization"
+    )
+    parser.add_argument(
+        "--no-lowercase", action="store_true", help="Disable lowercasing"
+    )
     args = parser.parse_args()
 
     if not args.input.exists():
@@ -162,10 +172,18 @@ def main() -> None:
         "train_count": len(train),
         "calib_count": len(calib),
         "holdout_count": len(holdout),
-        "last_train_collected_at": train[-1][0].isoformat() if train and train[-1][0] else None,
-        "first_calib_collected_at": calib[0][0].isoformat() if calib and calib[0][0] else None,
-        "last_calib_collected_at": calib[-1][0].isoformat() if calib and calib[-1][0] else None,
-        "first_holdout_collected_at": holdout[0][0].isoformat() if holdout and holdout[0][0] else None,
+        "last_train_collected_at": train[-1][0].isoformat()
+        if train and train[-1][0]
+        else None,
+        "first_calib_collected_at": calib[0][0].isoformat()
+        if calib and calib[0][0]
+        else None,
+        "last_calib_collected_at": calib[-1][0].isoformat()
+        if calib and calib[-1][0]
+        else None,
+        "first_holdout_collected_at": holdout[0][0].isoformat()
+        if holdout and holdout[0][0]
+        else None,
     }
     args.meta_out.parent.mkdir(parents=True, exist_ok=True)
     args.meta_out.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
@@ -177,7 +195,9 @@ def main() -> None:
     print(f"Wrote calib TXT to {args.calib_txt}")
     print(f"Wrote holdout TXT to {args.holdout_txt}")
     print(f"Wrote metadata to {args.meta_out}")
-    print(f"Counts: train={len(train)} calib={len(calib)} holdout={len(holdout)} total={total}")
+    print(
+        f"Counts: train={len(train)} calib={len(calib)} holdout={len(holdout)} total={total}"
+    )
 
 
 if __name__ == "__main__":

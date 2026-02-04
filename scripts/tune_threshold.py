@@ -42,7 +42,9 @@ def safe_div(num: float, den: float) -> float:
     return num / den if den else 0.0
 
 
-def build_confusion(rows: list[tuple[str, float]], threshold: float) -> dict[str, dict[str, int]]:
+def build_confusion(
+    rows: list[tuple[str, float]], threshold: float
+) -> dict[str, dict[str, int]]:
     confusion = {actual: {pred: 0 for pred in CLASSES} for actual in CLASSES}
     for actual, p_scam in rows:
         pred = "scam" if p_scam >= threshold else "clean"
@@ -72,9 +74,13 @@ def summarize(confusion: dict[str, dict[str, int]]) -> dict[str, float]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Tune threshold for reduced fastText model")
+    parser = argparse.ArgumentParser(
+        description="Tune threshold for reduced fastText model"
+    )
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL, help="Model file")
-    parser.add_argument("--valid", type=Path, default=DEFAULT_VALID, help="Validation file")
+    parser.add_argument(
+        "--valid", type=Path, default=DEFAULT_VALID, help="Validation file"
+    )
     args = parser.parse_args()
 
     if not args.model.exists():

@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Build artifacts
+dist/
+*.ftz
+*.bin
+*.vec
+
+# Data files
+data/
+dataset/
+models/
+
+# Test results
+test-results/
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+uv.lock

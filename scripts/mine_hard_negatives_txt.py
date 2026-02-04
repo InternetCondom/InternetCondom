@@ -22,14 +22,33 @@ from evaluate import get_scores, parse_line  # type: ignore
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL, help="Model file")
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT, help="Input fastText txt")
-    parser.add_argument("--label", type=str, default="scam", help="Label to mine against")
-    parser.add_argument("--top-n", type=int, default=200, help="Top N clean examples by score (0 = all)")
-    parser.add_argument("--threshold", type=float, default=None, help="Minimum score to include")
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Output hard negatives txt")
-    parser.add_argument("--train-in", type=Path, default=None, help="Optional base training txt")
-    parser.add_argument("--train-out", type=Path, default=None, help="Optional output training txt")
-    parser.add_argument("--mult", type=int, default=3, help="Repeat hard negatives N times when appending")
+    parser.add_argument(
+        "--input", type=Path, default=DEFAULT_INPUT, help="Input fastText txt"
+    )
+    parser.add_argument(
+        "--label", type=str, default="scam", help="Label to mine against"
+    )
+    parser.add_argument(
+        "--top-n", type=int, default=200, help="Top N clean examples by score (0 = all)"
+    )
+    parser.add_argument(
+        "--threshold", type=float, default=None, help="Minimum score to include"
+    )
+    parser.add_argument(
+        "--out", type=Path, default=DEFAULT_OUT, help="Output hard negatives txt"
+    )
+    parser.add_argument(
+        "--train-in", type=Path, default=None, help="Optional base training txt"
+    )
+    parser.add_argument(
+        "--train-out", type=Path, default=None, help="Optional output training txt"
+    )
+    parser.add_argument(
+        "--mult",
+        type=int,
+        default=3,
+        help="Repeat hard negatives N times when appending",
+    )
     args = parser.parse_args()
 
     if not args.model.exists():

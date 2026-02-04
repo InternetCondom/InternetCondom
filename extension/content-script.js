@@ -3,8 +3,8 @@ const MAX_CHARS = 800;
 const BATCH_SIZE = 4;
 const LOG_INFERENCE = true;
 
-const HOSTNAME = String(globalThis.location?.hostname || '').toLowerCase();
-const IS_X = HOSTNAME === 'x.com' || HOSTNAME.endsWith('.x.com');
+const HOSTNAME = String(globalThis.location?.hostname || "").toLowerCase();
+const IS_X = HOSTNAME === "x.com" || HOSTNAME.endsWith(".x.com");
 const X_TWEET_SELECTOR = 'div[data-testid="tweetText"]';
 
 const queue = [];
@@ -14,29 +14,32 @@ let processing = false;
 let stylesInjected = false;
 
 const SKIP_TAGS = new Set([
-  'SCRIPT',
-  'STYLE',
-  'NOSCRIPT',
-  'INPUT',
-  'TEXTAREA',
-  'SELECT',
-  'OPTION',
-  'CODE',
-  'PRE',
-  'SVG',
-  'CANVAS',
+  "SCRIPT",
+  "STYLE",
+  "NOSCRIPT",
+  "INPUT",
+  "TEXTAREA",
+  "SELECT",
+  "OPTION",
+  "CODE",
+  "PRE",
+  "SVG",
+  "CANVAS",
 ]);
 
 const idle = () =>
   new Promise((resolve) => {
-    if (typeof requestIdleCallback === 'function') {
+    if (typeof requestIdleCallback === "function") {
       requestIdleCallback(() => resolve(), { timeout: 500 });
     } else {
       setTimeout(resolve, 16);
     }
   });
 
-const normalizeText = (text) => String(text || '').replace(/\s+/g, ' ').trim();
+const normalizeText = (text) =>
+  String(text || "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const previewText = (text, limit = 200) => {
   const cleaned = normalizeText(text);
@@ -53,8 +56,8 @@ const isSkippableElement = (el) => {
 };
 
 const extractText = (el) => {
-  if (!el) return '';
-  const raw = el.innerText || el.textContent || '';
+  if (!el) return "";
+  const raw = el.innerText || el.textContent || "";
   let text = normalizeText(raw);
   if (text.length > MAX_CHARS) {
     text = text.slice(0, MAX_CHARS);
@@ -63,10 +66,18 @@ const extractText = (el) => {
 };
 
 const getRuntime = () => {
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+  if (
+    typeof chrome !== "undefined" &&
+    chrome.runtime &&
+    chrome.runtime.sendMessage
+  ) {
     return chrome.runtime;
   }
-  if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.sendMessage) {
+  if (
+    typeof browser !== "undefined" &&
+    browser.runtime &&
+    browser.runtime.sendMessage
+  ) {
     return browser.runtime;
   }
   return null;
@@ -75,9 +86,12 @@ const getRuntime = () => {
 const sendMessage = (message) => {
   const runtime = getRuntime();
   if (!runtime) {
-    return Promise.reject(new Error('Extension runtime is unavailable.'));
+    return Promise.reject(new Error("Extension runtime is unavailable."));
   }
-  if (typeof runtime.sendMessage === 'function' && runtime.sendMessage.length >= 2) {
+  if (
+    typeof runtime.sendMessage === "function" &&
+    runtime.sendMessage.length >= 2
+  ) {
     return new Promise((resolve, reject) => {
       runtime.sendMessage(message, (response) => {
         const err = runtime.lastError;
@@ -93,19 +107,19 @@ const sendMessage = (message) => {
 };
 
 const inferBatch = async (texts) => {
-  const response = await sendMessage({ type: 'ic-infer', texts });
+  const response = await sendMessage({ type: "ic-infer", texts });
   if (!response || !response.ok) {
-    throw new Error(response?.error || 'Inference failed');
+    throw new Error(response?.error || "Inference failed");
   }
   return response.results || [];
 };
 
 const pickTopLabel = (scores) => {
-  let bestLabel = 'clean';
+  let bestLabel = "clean";
   let bestScore = -1;
-  if (scores && typeof scores === 'object') {
+  if (scores && typeof scores === "object") {
     for (const [label, score] of Object.entries(scores)) {
-      if (typeof score === 'number' && score > bestScore) {
+      if (typeof score === "number" && score > bestScore) {
         bestScore = score;
         bestLabel = label;
       }
@@ -115,12 +129,12 @@ const pickTopLabel = (scores) => {
 };
 
 const pickLabelList = (scores, { minScore = 0.5, maxLabels = 3 } = {}) => {
-  if (!scores || typeof scores !== 'object') return [];
+  if (!scores || typeof scores !== "object") return [];
   const entries = Object.entries(scores)
     .filter(([, score]) => Number.isFinite(score))
     .sort((a, b) => b[1] - a[1]);
   const picked = entries
-    .filter(([label, score]) => label !== 'clean' && score >= minScore)
+    .filter(([label, score]) => label !== "clean" && score >= minScore)
     .map(([label]) => label);
   if (picked.length === 0 && entries.length > 0) {
     picked.push(entries[0][0]);
@@ -129,34 +143,34 @@ const pickLabelList = (scores, { minScore = 0.5, maxLabels = 3 } = {}) => {
 };
 
 const formatScores = (scores, limit = 4) => {
-  if (!scores || typeof scores !== 'object') return '';
+  if (!scores || typeof scores !== "object") return "";
   const entries = Object.entries(scores)
     .filter(([, score]) => Number.isFinite(score))
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([label, score]) => `${label}=${score.toFixed(3)}`);
-  return entries.join(' ');
+  return entries.join(" ");
 };
 
 const clearHighlight = (el) => {
   if (!el) return;
-  el.classList.remove('ic-flagged', 'ic-scam', 'ic-crypto', 'ic-promo');
-  el.removeAttribute('data-ic-label');
-  el.removeAttribute('data-ic-labels');
-  el.removeAttribute('data-ic-score');
-  el.removeAttribute('data-ic-pscam');
-  el.removeAttribute('title');
+  el.classList.remove("ic-flagged", "ic-scam", "ic-crypto", "ic-promo");
+  el.removeAttribute("data-ic-label");
+  el.removeAttribute("data-ic-labels");
+  el.removeAttribute("data-ic-score");
+  el.removeAttribute("data-ic-pscam");
+  el.removeAttribute("title");
 };
 
 const applyHighlight = (el, label, score, pScam, labels = [], scores = {}) => {
   if (!el) return;
-  el.classList.add('ic-flagged');
-  el.classList.toggle('ic-scam', label === 'scam');
-  el.classList.toggle('ic-crypto', label === 'crypto');
-  el.classList.toggle('ic-promo', label === 'promo');
+  el.classList.add("ic-flagged");
+  el.classList.toggle("ic-scam", label === "scam");
+  el.classList.toggle("ic-crypto", label === "crypto");
+  el.classList.toggle("ic-promo", label === "promo");
   el.dataset.icLabel = label;
   if (labels.length > 0) {
-    el.dataset.icLabels = labels.join(' + ');
+    el.dataset.icLabels = labels.join(" + ");
   }
   if (Number.isFinite(score)) {
     el.dataset.icScore = score.toFixed(3);
@@ -164,11 +178,11 @@ const applyHighlight = (el, label, score, pScam, labels = [], scores = {}) => {
   if (Number.isFinite(pScam)) {
     el.dataset.icPscam = pScam.toFixed(3);
   }
-  const labelText = labels.length > 0 ? labels.join(' + ') : `${label}`;
-  const scoreText = Number.isFinite(score) ? `, score=${score.toFixed(3)}` : '';
-  const pScamText = Number.isFinite(pScam) ? `, pScam=${pScam.toFixed(3)}` : '';
+  const labelText = labels.length > 0 ? labels.join(" + ") : `${label}`;
+  const scoreText = Number.isFinite(score) ? `, score=${score.toFixed(3)}` : "";
+  const pScamText = Number.isFinite(pScam) ? `, pScam=${pScam.toFixed(3)}` : "";
   const scoreList = formatScores(scores);
-  const scoreListText = scoreList ? `, scores: ${scoreList}` : '';
+  const scoreListText = scoreList ? `, scores: ${scoreList}` : "";
   el.title = `Scam model: ${labelText}${scoreText}${pScamText}${scoreListText}`;
 };
 
@@ -210,10 +224,12 @@ const processQueue = async () => {
           const { label, score } = pickTopLabel(scores);
           const labelList = pickLabelList(scores);
           const pScam =
-            typeof scores.scam === 'number' ? scores.scam : result?.probability || 0;
+            typeof scores.scam === "number"
+              ? scores.scam
+              : result?.probability || 0;
 
           if (LOG_INFERENCE) {
-            console.log('[IC] inference', {
+            console.log("[IC] inference", {
               label,
               score: Number.isFinite(score) ? Number(score.toFixed(3)) : score,
               pScam: Number.isFinite(pScam) ? Number(pScam.toFixed(3)) : pScam,
@@ -222,14 +238,14 @@ const processQueue = async () => {
             });
           }
 
-          if (label !== 'clean') {
+          if (label !== "clean") {
             applyHighlight(el, label, score, pScam, labelList, scores);
           } else {
             clearHighlight(el);
           }
         }
       } catch (err) {
-        console.warn('Scam detector inference failed', err);
+        console.warn("Scam detector inference failed", err);
       }
     }
     await idle();
@@ -251,19 +267,16 @@ const scanTree = (root) => {
     root.querySelectorAll(X_TWEET_SELECTOR).forEach((el) => enqueueElement(el));
     return;
   }
-  const walker = document.createTreeWalker(
-    root,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        if (!node || !node.parentElement) return NodeFilter.FILTER_REJECT;
-        if (isSkippableElement(node.parentElement)) return NodeFilter.FILTER_REJECT;
-        const text = normalizeText(node.textContent || '');
-        if (text.length < MIN_CHARS) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
-      },
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => {
+      if (!node || !node.parentElement) return NodeFilter.FILTER_REJECT;
+      if (isSkippableElement(node.parentElement))
+        return NodeFilter.FILTER_REJECT;
+      const text = normalizeText(node.textContent || "");
+      if (text.length < MIN_CHARS) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
     },
-  );
+  });
 
   let node = walker.nextNode();
   while (node) {
@@ -275,7 +288,7 @@ const scanTree = (root) => {
 const observeMutations = () => {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
-      if (mutation.type === 'characterData') {
+      if (mutation.type === "characterData") {
         const el = mutation.target.parentElement;
         if (!el) continue;
         if (IS_X) {
@@ -284,7 +297,7 @@ const observeMutations = () => {
           continue;
         }
         enqueueElement(el);
-      } else if (mutation.type === 'childList') {
+      } else if (mutation.type === "childList") {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.TEXT_NODE) {
             if (!node.parentElement) return;
@@ -300,7 +313,9 @@ const observeMutations = () => {
               if (el.matches && el.matches(X_TWEET_SELECTOR)) {
                 enqueueElement(el);
               }
-              el.querySelectorAll?.(X_TWEET_SELECTOR).forEach((tweet) => enqueueElement(tweet));
+              el.querySelectorAll?.(X_TWEET_SELECTOR).forEach((tweet) =>
+                enqueueElement(tweet),
+              );
             } else {
               scanTree(node);
             }
@@ -320,7 +335,7 @@ const observeMutations = () => {
 const injectStyles = () => {
   if (stylesInjected) return;
   stylesInjected = true;
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     .ic-flagged {
       outline: 2px solid #ff4d4f;
@@ -366,8 +381,8 @@ const init = () => {
   observeMutations();
 };
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init, { once: true });
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init, { once: true });
 } else {
   init();
 }

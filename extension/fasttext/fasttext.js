@@ -2,13 +2,13 @@
  * fastText WebAssembly wrapper for browser/extension usage.
  * Based on the upstream fastText webassembly API with a minimal async init.
  */
-import fastTextModularized from './fasttext_wasm.js';
+import fastTextModularized from "./fasttext_wasm.js";
 
-const wasmUrl = new URL('./fasttext_wasm.wasm', import.meta.url).toString();
+const wasmUrl = new URL("./fasttext_wasm.wasm", import.meta.url).toString();
 
 const fastTextModulePromise = fastTextModularized({
   locateFile: (path) => {
-    if (path.endsWith('.wasm')) {
+    if (path.endsWith(".wasm")) {
       return wasmUrl;
     }
     return new URL(path, import.meta.url).toString();
@@ -35,15 +35,19 @@ const addOnPostRun = function (func) {
   }
 };
 
-const thisModule = typeof globalThis !== 'undefined' ? globalThis : undefined;
-const trainFileInWasmFs = 'train.txt';
-const testFileInWasmFs = 'test.txt';
-const modelFileInWasmFs = 'model.bin';
+const thisModule = typeof globalThis !== "undefined" ? globalThis : undefined;
+const trainFileInWasmFs = "train.txt";
+const testFileInWasmFs = "test.txt";
+const modelFileInWasmFs = "model.bin";
 
 const getFloat32ArrayFromHeap = (len) => {
   const dataBytes = len * Float32Array.BYTES_PER_ELEMENT;
   const dataPtr = fastTextModule._malloc(dataBytes);
-  const dataHeap = new Uint8Array(fastTextModule.HEAPU8.buffer, dataPtr, dataBytes);
+  const dataHeap = new Uint8Array(
+    fastTextModule.HEAPU8.buffer,
+    dataPtr,
+    dataBytes,
+  );
   return {
     ptr: dataHeap.byteOffset,
     size: len,
@@ -56,7 +60,9 @@ const heapToFloat32 = (r) => new Float32Array(r.buffer, r.ptr, r.size);
 class FastText {
   constructor() {
     if (!fastTextModule) {
-      throw new Error('fastText WASM module not initialized. Await fastTextReady first.');
+      throw new Error(
+        "fastText WASM module not initialized. Await fastTextReady first.",
+      );
     }
     this.f = new fastTextModule.FastText();
   }
@@ -101,37 +107,37 @@ class FastText {
         })
         .then(() => {
           const argsList = [
-            'lr',
-            'lrUpdateRate',
-            'dim',
-            'ws',
-            'epoch',
-            'minCount',
-            'minCountLabel',
-            'neg',
-            'wordNgrams',
-            'loss',
-            'model',
-            'bucket',
-            'minn',
-            'maxn',
-            't',
-            'label',
-            'verbose',
-            'pretrainedVectors',
-            'saveOutput',
-            'seed',
-            'qout',
-            'retrain',
-            'qnorm',
-            'cutoff',
-            'dsub',
-            'qnorm',
-            'autotuneValidationFile',
-            'autotuneMetric',
-            'autotunePredictions',
-            'autotuneDuration',
-            'autotuneModelSize',
+            "lr",
+            "lrUpdateRate",
+            "dim",
+            "ws",
+            "epoch",
+            "minCount",
+            "minCountLabel",
+            "neg",
+            "wordNgrams",
+            "loss",
+            "model",
+            "bucket",
+            "minn",
+            "maxn",
+            "t",
+            "label",
+            "verbose",
+            "pretrainedVectors",
+            "saveOutput",
+            "seed",
+            "qout",
+            "retrain",
+            "qnorm",
+            "cutoff",
+            "dsub",
+            "qnorm",
+            "autotuneValidationFile",
+            "autotuneMetric",
+            "autotunePredictions",
+            "autotuneDuration",
+            "autotuneModelSize",
           ];
           const args = new fastTextModule.Args();
           argsList.forEach((k) => {
@@ -140,7 +146,8 @@ class FastText {
             }
           });
           args.model = fastTextModule.ModelName[modelName];
-          args.loss = 'loss' in kwargs ? fastTextModule.LossName[kwargs.loss] : 'hs';
+          args.loss =
+            "loss" in kwargs ? fastTextModule.LossName[kwargs.loss] : "hs";
           args.thread = 1;
           args.input = trainFileInWasmFs;
 
@@ -158,7 +165,7 @@ class FastText {
     const self = this;
     return new Promise(function (resolve, reject) {
       self
-        ._train(url, 'supervised', kwargs, callback)
+        ._train(url, "supervised", kwargs, callback)
         .then((model) => {
           resolve(model);
         })
@@ -203,10 +210,10 @@ class FastTextModel {
   }
 
   getSentenceVector(text) {
-    if (text.indexOf('\n') !== -1) {
-      'sentence vector processes one line at a time (remove \\n)';
+    if (text.indexOf("\n") !== -1) {
+      ("sentence vector processes one line at a time (remove \\n)");
     }
-    text += '\n';
+    text += "\n";
     const b = getFloat32ArrayFromHeap(this.getDimension());
     this.f.getSentenceVector(b, text);
     return heapToFloat32(b);
@@ -270,10 +277,15 @@ class FastTextModel {
 
   saveModel() {
     this.f.saveModel(modelFileInWasmFs);
-    const content = fastTextModule.FS.readFile(modelFileInWasmFs, { encoding: 'binary' });
-    return new Blob([new Uint8Array(content, content.byteOffset, content.length)], {
-      type: 'application/octet-stream',
+    const content = fastTextModule.FS.readFile(modelFileInWasmFs, {
+      encoding: "binary",
     });
+    return new Blob(
+      [new Uint8Array(content, content.byteOffset, content.length)],
+      {
+        type: "application/octet-stream",
+      },
+    );
   }
 
   test(url, k, threshold) {

@@ -45,9 +45,11 @@ npm install fasttext.wasm.js
 ### Phase 2: Extract WASM Assets
 
 Copy from `node_modules/fasttext.wasm.js`:
+
 - `dist/core/fastText.common.wasm` → `public/fastText/fastText.common.wasm`
 
 Or use a build script to copy automatically:
+
 ```bash
 mkdir -p extension/public/fastText/models
 cp node_modules/fasttext.wasm.js/dist/core/fastText.common.wasm extension/fasttext/
@@ -63,7 +65,11 @@ cp models/reduced/quant-cutoff100k.ftz extension/models/quant-cutoff100k.ftz
 **`src/lib/scam-detector.ts`**:
 
 ```typescript
-import { getFastTextModule, getFastTextClass, type FastTextModel } from 'fasttext.wasm.js/common';
+import {
+  getFastTextModule,
+  getFastTextClass,
+  type FastTextModel,
+} from "fasttext.wasm.js/common";
 
 const PRODUCTION_THRESHOLD = 0.6151;
 
@@ -78,27 +84,39 @@ export class ScamDetector {
   private model: FastTextModel | null = null;
   private loaded = false;
 
-  async load(options?: { wasmPath?: string; modelPath?: string }): Promise<void> {
+  async load(options?: {
+    wasmPath?: string;
+    modelPath?: string;
+  }): Promise<void> {
     if (this.loaded) return;
 
-    const wasmPath = options?.wasmPath ?? chrome.runtime.getURL('fastText/fastText.common.wasm');
-    const modelPath = options?.modelPath ?? chrome.runtime.getURL('models/quant-cutoff100k.ftz');
+    const wasmPath =
+      options?.wasmPath ??
+      chrome.runtime.getURL("fastText/fastText.common.wasm");
+    const modelPath =
+      options?.modelPath ??
+      chrome.runtime.getURL("models/quant-cutoff100k.ftz");
 
     // Step 1: Initialize the WASM module with custom path
     const getFastTextModuleWithPath = () => getFastTextModule({ wasmPath });
-    
+
     // Step 2: Get the FastText class
-    const FastText = await getFastTextClass({ getFastTextModule: getFastTextModuleWithPath });
-    
+    const FastText = await getFastTextClass({
+      getFastTextModule: getFastTextModuleWithPath,
+    });
+
     // Step 3: Load the model
     const ft = new FastText();
     this.model = await ft.loadModel(modelPath);
     this.loaded = true;
   }
 
-  async predict(text: string, threshold = PRODUCTION_THRESHOLD): Promise<PredictionResult> {
+  async predict(
+    text: string,
+    threshold = PRODUCTION_THRESHOLD,
+  ): Promise<PredictionResult> {
     if (!this.model) {
-      throw new Error('Model not loaded. Call load() first.');
+      throw new Error("Model not loaded. Call load() first.");
     }
 
     // fastText predict returns Vector<Pair<number, string>> where Pair is a tuple [number, string]:
@@ -106,7 +124,7 @@ export class ScamDetector {
     // - [1] is label (e.g., "__label__scam")
     // Use -1 to get ALL labels (don't assume binary normalized probabilities!)
     const predictions = this.model.predict(text, -1);
-    
+
     try {
       // Scan predictions for __label__scam explicitly
       // (fastText doesn't guarantee p(scam)+p(not_scam)=1)
@@ -115,16 +133,16 @@ export class ScamDetector {
         const pair = predictions.get(i);
         const prob = pair[0];
         const label = pair[1];
-        if (label === '__label__scam') {
+        if (label === "__label__scam") {
           scamProb = prob;
           break;
         }
       }
-      
+
       return {
         isScam: scamProb >= threshold,
         confidence: scamProb >= threshold ? scamProb : 1 - scamProb,
-        label: scamProb >= threshold ? 'scam' : 'not_scam',
+        label: scamProb >= threshold ? "scam" : "not_scam",
         rawProbability: scamProb,
       };
     } finally {
@@ -157,18 +175,18 @@ export async function getScamDetector(): Promise<ScamDetector> {
 **`src/background.ts`**:
 
 ```typescript
-import { getScamDetector, PredictionResult } from './lib/scam-detector';
+import { getScamDetector, PredictionResult } from "./lib/scam-detector";
 
 // Initialize on install/startup
 chrome.runtime.onInstalled.addListener(async () => {
-  console.log('[ScamDetector] Initializing...');
+  console.log("[ScamDetector] Initializing...");
   const detector = await getScamDetector();
-  console.log('[ScamDetector] Model loaded!');
+  console.log("[ScamDetector] Model loaded!");
 });
 
 // Message handler for content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'CHECK_SCAM') {
+  if (message.type === "CHECK_SCAM") {
     (async () => {
       try {
         const detector = await getScamDetector();
@@ -190,12 +208,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 ```typescript
 async function checkText(text: string) {
   const response = await chrome.runtime.sendMessage({
-    type: 'CHECK_SCAM',
+    type: "CHECK_SCAM",
     text,
   });
-  
+
   if (response.success && response.result.isScam) {
-    console.warn('🚨 Potential scam detected:', response.result);
+    console.warn("🚨 Potential scam detected:", response.result);
     // Show warning UI
   }
 }
@@ -223,22 +241,22 @@ async function checkText(text: string) {
 
 ## Files to Create/Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `extension/package.json` | Modify | Add `fasttext.wasm.js` dependency |
-| `extension/public/fastText/fastText.common.wasm` | Create | Copy WASM binary |
-| `extension/models/quant-cutoff100k.ftz` | Create | Copy our model |
-| `extension/src/lib/scam-detector.ts` | Create | ScamDetector wrapper class |
-| `extension/src/background.ts` | Modify | Initialize detector, handle messages |
-| `extension/manifest.json` | Modify | Add web_accessible_resources |
+| File                                             | Action | Description                          |
+| ------------------------------------------------ | ------ | ------------------------------------ |
+| `extension/package.json`                         | Modify | Add `fasttext.wasm.js` dependency    |
+| `extension/public/fastText/fastText.common.wasm` | Create | Copy WASM binary                     |
+| `extension/models/quant-cutoff100k.ftz`          | Create | Copy our model                       |
+| `extension/src/lib/scam-detector.ts`             | Create | ScamDetector wrapper class           |
+| `extension/src/background.ts`                    | Modify | Initialize detector, handle messages |
+| `extension/manifest.json`                        | Modify | Add web_accessible_resources         |
 
 ## Configuration
 
-| Parameter | Value | Notes |
-|-----------|-------|-------|
-| Threshold | 0.6151 | Tuned for <=2% FPR on holdout |
-| Model | `quant-cutoff100k.ftz` | 5.72MB, quantized |
-| WASM | `fastText.common.wasm` | 423KB |
+| Parameter | Value                  | Notes                         |
+| --------- | ---------------------- | ----------------------------- |
+| Threshold | 0.6151                 | Tuned for <=2% FPR on holdout |
+| Model     | `quant-cutoff100k.ftz` | 5.72MB, quantized             |
+| WASM      | `fastText.common.wasm` | 423KB                         |
 
 **Total bundle size: ~6.1MB** - still reasonable for a browser extension.
 
@@ -279,10 +297,10 @@ async function checkText(text: string) {
 ## Example Predictions
 
 ```typescript
-await detector.predict("FREE AIRDROP! Connect wallet now!")
+await detector.predict("FREE AIRDROP! Connect wallet now!");
 // → { isScam: true, confidence: 0.999, label: 'scam', rawProbability: 0.999 }
 
-await detector.predict("The meeting is scheduled for tomorrow at 3pm")
+await detector.predict("The meeting is scheduled for tomorrow at 3pm");
 // → { isScam: false, confidence: 0.95, label: 'not_scam', rawProbability: 0.05 }
 ```
 

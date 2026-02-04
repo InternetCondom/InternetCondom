@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 
-const constants = require('./constants.cjs');
+const constants = require("./constants.cjs");
 
 class FastTextModel {
   core;
@@ -14,11 +14,15 @@ class FastTextModel {
   getFloat32ArrayFromHeap = (len) => {
     const dataBytes = len * Float32Array.BYTES_PER_ELEMENT;
     const dataPtr = this.core._malloc(dataBytes);
-    const dataHeap = new Uint8Array(this.core.HEAPU8.buffer, dataPtr, dataBytes);
+    const dataHeap = new Uint8Array(
+      this.core.HEAPU8.buffer,
+      dataPtr,
+      dataBytes,
+    );
     return {
       ptr: dataHeap.byteOffset,
       size: len,
-      buffer: dataHeap.buffer
+      buffer: dataHeap.buffer,
     };
   };
   heapToFloat32 = (r) => new Float32Array(r.buffer, r.ptr, r.size);
@@ -58,7 +62,7 @@ class FastTextModel {
    *
    */
   getSentenceVector(text) {
-    if (text.includes("\n")) ;
+    if (text.includes("\n"));
     text += "\n";
     const b = this.getFloat32ArrayFromHeap(this.getDimension());
     this.ft.getSentenceVector(b, text);
@@ -229,11 +233,11 @@ class FastTextModel {
   saveModel() {
     this.ft.saveModel(constants.modelFileInWasmFs);
     const content = this.core.FS.readFile(constants.modelFileInWasmFs, {
-      encoding: "binary"
+      encoding: "binary",
     });
     return new Blob(
       [new Uint8Array(content, content.byteOffset, content.length)],
-      { type: " application/octet-stream" }
+      { type: " application/octet-stream" },
     );
   }
   /**
@@ -257,18 +261,26 @@ class FastTextModel {
     const fetchFunc = globalThis.fetch || fetch;
     const fastTextNative = this.ft;
     return new Promise((resolve, reject) => {
-      fetchFunc(url).then((response) => {
-        return response.arrayBuffer();
-      }).then((bytes) => {
-        const byteArray = new Uint8Array(bytes);
-        const FS = this.core.FS;
-        FS.writeFile(constants.testFileInWasmFs, byteArray);
-      }).then(() => {
-        const meter = fastTextNative.test(constants.testFileInWasmFs, k, threshold);
-        resolve(meter);
-      }).catch((error) => {
-        reject(error);
-      });
+      fetchFunc(url)
+        .then((response) => {
+          return response.arrayBuffer();
+        })
+        .then((bytes) => {
+          const byteArray = new Uint8Array(bytes);
+          const FS = this.core.FS;
+          FS.writeFile(constants.testFileInWasmFs, byteArray);
+        })
+        .then(() => {
+          const meter = fastTextNative.test(
+            constants.testFileInWasmFs,
+            k,
+            threshold,
+          );
+          resolve(meter);
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   }
 }

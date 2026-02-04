@@ -21,6 +21,7 @@ This is the highest accuracy achievable under extreme CPU/RAM constraints becaus
 ### Primary model: Train from scratch
 
 Train a bag-of-ngrams classifier (fastText or hashed linear model):
+
 - Extremely fast on CPU
 - Tiny RAM footprint
 - Robust to obfuscation with character n-grams
@@ -48,6 +49,7 @@ Zero/near-zero cost checks before ML:
 - **Cheap "AI reply" heuristics** (e.g., "as an AI…", templated disclaimers)
 
 **Output:**
+
 - Hard block if rules are high-confidence
 - Else pass features forward as special tokens (e.g., `HAS_WALLET`, `HAS_URL`, `__TLD_XYZ__`)
 
@@ -68,6 +70,7 @@ Word + char n-grams. Why this is the best default:
 Only run when Stage 1 confidence is near threshold (or when user enables "high accuracy mode").
 
 **Constraints:**
+
 - 4–6 layers
 - Hidden size 256–384
 - Max sequence length 96–128 tokens (fits X posts)
@@ -123,6 +126,7 @@ Training note: you can cluster labels during training (merge into coarse super-c
 ### Step 1: Establish True Baseline (v0)
 
 Implement:
+
 - TF-IDF + logistic regression on CPU
 - Plus rules
 
@@ -133,6 +137,7 @@ This gives you an error profile and a labeling feedback loop quickly.
 Pick one (fastText is usually simplest end-to-end):
 
 **Option A (recommended): fastText**
+
 - Train supervised classifier with:
   - Word n-grams (1–2)
   - Subword/char n-grams enabled (key for obfuscation)
@@ -142,6 +147,7 @@ Pick one (fastText is usually simplest end-to-end):
 - Can be used via WebAssembly in-browser
 
 **Option B: Hashed Linear Model**
+
 - HashingVectorizer-like pipeline (word + char n-grams) + linear classifier
 - Pros: easiest "top features" explanations
 - Cons: must implement hashing/tokenization carefully in JS to match training
@@ -170,6 +176,7 @@ This is how you get near-Transformer accuracy while keeping fastText CPU perform
 Goal: low false positives with adjustable thresholds.
 
 **Process:**
+
 - Collect:
   - False positives from real browsing sessions (user "unhide" action)
   - False negatives (user "report scam/slop" action)
@@ -201,9 +208,11 @@ If you deploy Stage 2:
 #### Execution Environment
 
 **Stage 1 (fastText):**
+
 - Run in a WebWorker using fastText WebAssembly
 
 **Stage 2 (optional Transformer):**
+
 - ONNX Runtime Web:
   - WebGPU fast path
   - WASM CPU fallback
@@ -238,6 +247,7 @@ Stage 2:
 ### Local Desktop / Server-side Browsing Instances
 
 If running inside automation/browsers on machines (OpenClaw instances):
+
 - Reuse the same model artifacts
 - Run Stage 1 in:
   - Node.js with WASM, or
@@ -254,10 +264,12 @@ If running inside automation/browsers on machines (OpenClaw instances):
 **Do not treat raw scores as probabilities.**
 
 ### Offline:
+
 - Fit temperature scaling / isotonic regression on a validation set
 - Select thresholds to hit target FP rates (e.g., precision ≥ 0.995 on clean)
 
 ### Runtime:
+
 - Expose "strictness" slider that maps to thresholds:
   - **Conservative mode:** only hide at very high confidence
   - **Aggressive mode:** hide at moderate confidence
@@ -305,21 +317,21 @@ This directly implements the goal of user-adjustable cutoffs.
 
 ### Training
 
-| Component | Technology |
-|-----------|------------|
-| Stage 1 | fastText supervised (word + char n-grams) |
-| Teacher (offline only) | Large Transformer encoder |
-| Distillation | Teacher → fastText + hard negatives |
-| Optional Stage 2 | Tiny Transformer fine-tune + ONNX export + quantization |
-| Optimization tooling | Olive for ONNX workflows |
+| Component              | Technology                                              |
+| ---------------------- | ------------------------------------------------------- |
+| Stage 1                | fastText supervised (word + char n-grams)               |
+| Teacher (offline only) | Large Transformer encoder                               |
+| Distillation           | Teacher → fastText + hard negatives                     |
+| Optional Stage 2       | Tiny Transformer fine-tune + ONNX export + quantization |
+| Optimization tooling   | Olive for ONNX workflows                                |
 
 ### Inference
 
-| Component | Technology |
-|-----------|------------|
-| Browser Stage 1 | fastText WASM in WebWorker |
+| Component                  | Technology                                            |
+| -------------------------- | ----------------------------------------------------- |
+| Browser Stage 1            | fastText WASM in WebWorker                            |
 | Browser Stage 2 (optional) | ONNX Runtime Web (WebGPU if available; WASM fallback) |
-| Optional wrapper | Transformers.js v3 |
-| CPU throttling | `env.wasm.numThreads` in ORT Web |
+| Optional wrapper           | Transformers.js v3                                    |
+| CPU throttling             | `env.wasm.numThreads` in ORT Web                      |
 
 This gives you an extremely cheap always-on filter that still has a path to "near-teacher" quality via distillation, and a selective Transformer fallback for the hardest cases.

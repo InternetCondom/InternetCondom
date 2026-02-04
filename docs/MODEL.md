@@ -16,14 +16,14 @@ echo "just vibing with crypto friends" | python scripts/inference.py --stdin
 
 ## Model Details
 
-| Property | Value |
-|----------|-------|
-| Type | fastText supervised |
-| Training samples | 1448 |
-| Validation samples | 363 |
-| Classes | clean, crypto, scam, promo |
-| Model size | ~767MB (unquantized) |
-| Inference time | <1ms per sample |
+| Property           | Value                      |
+| ------------------ | -------------------------- |
+| Type               | fastText supervised        |
+| Training samples   | 1448                       |
+| Validation samples | 363                        |
+| Classes            | clean, crypto, scam, promo |
+| Model size         | ~767MB (unquantized)       |
+| Inference time     | <1ms per sample            |
 
 ## Production Thresholds
 
@@ -72,14 +72,15 @@ scripts/
 
 ## Label Schema
 
-| Label | Description | Example |
-|-------|-------------|---------|
-| `scam` | Theft/phishing attempts (crypto or not) | "Send 1 ETH get 2 back!" |
-| `crypto` | Legitimate crypto discussion | "BTC looking bullish today" |
-| `promo` | Promotional/advertising copy | "Free trial — get access in 2 minutes" |
-| `clean` | Non-crypto content | "Great weather today" |
+| Label    | Description                             | Example                                |
+| -------- | --------------------------------------- | -------------------------------------- |
+| `scam`   | Theft/phishing attempts (crypto or not) | "Send 1 ETH get 2 back!"               |
+| `crypto` | Legitimate crypto discussion            | "BTC looking bullish today"            |
+| `promo`  | Promotional/advertising copy            | "Free trial — get access in 2 minutes" |
+| `clean`  | Non-crypto content                      | "Great weather today"                  |
 
 Multi-label:
+
 - Store labels as an array (e.g. `["crypto", "promo"]`).
 - `clean` should be exclusive.
 - fastText supports multi-label by putting multiple `__label__...` tokens on the same line.
@@ -91,6 +92,7 @@ Multi-label:
 ## Browser Extension Integration
 
 For WASM deployment, the model needs to be:
+
 1. Quantized (reduces ~767MB → target size)
 2. Compiled to WASM via fastText WASM port
 
@@ -101,10 +103,10 @@ File: models/experiments/quant_grid_10mb/grid_w1_c25_lr0.2_cut1000_dsub8_qout0_q
 Size: 120 KB
 ```
 
-| Label | Recall | Precision | FPR |
-|-------|--------|-----------|-----|
-| Crypto | 89.2% | 99.3% | 1.1% |
-| Scam | 33.7% | 91.9% | 1.9% |
+| Label  | Recall | Precision | FPR  |
+| ------ | ------ | --------- | ---- |
+| Crypto | 89.2%  | 99.3%     | 1.1% |
+| Scam   | 33.7%  | 91.9%     | 1.9% |
 
 This model is **800x smaller** than the default quantized model (97MB) with **better crypto recall** (89% vs 64%). The aggressive vocabulary cutoff (1000 words) forces the model to focus on the most discriminative features.
 

@@ -18,7 +18,9 @@ try:
     import jsonschema
     from jsonschema import Draft202012Validator, ValidationError
 except ImportError:
-    print("Error: jsonschema not installed. Run: pip install jsonschema", file=sys.stderr)
+    print(
+        "Error: jsonschema not installed. Run: pip install jsonschema", file=sys.stderr
+    )
     sys.exit(1)
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -43,7 +45,10 @@ LABELED_SAMPLE_SCHEMA = {
         "labels": {
             "type": "array",
             "minItems": 1,
-            "items": {"type": "string", "enum": ["crypto", "scam", "promo", "ai_generated_reply", "clean"]},
+            "items": {
+                "type": "string",
+                "enum": ["crypto", "scam", "promo", "ai_generated_reply", "clean"],
+            },
         },
         "notes": {"type": "string"},
     },
@@ -67,7 +72,9 @@ def load_schema(schema_name: str) -> dict[str, Any]:
         return json.load(f)
 
 
-def validate_jsonl(file_path: Path, schema: dict[str, Any]) -> tuple[int, int, list[str]]:
+def validate_jsonl(
+    file_path: Path, schema: dict[str, Any]
+) -> tuple[int, int, list[str]]:
     """Validate a JSONL file. Returns (valid_count, error_count, errors)."""
     validator = Draft202012Validator(schema)
     valid = 0
@@ -147,7 +154,9 @@ def main():
         default="x-post-snapshot",
         help="Schema to use: x-post-snapshot, labeled, or path to schema file",
     )
-    parser.add_argument("--check-schemas", action="store_true", help="Validate schema files")
+    parser.add_argument(
+        "--check-schemas", action="store_true", help="Validate schema files"
+    )
     args = parser.parse_args()
 
     if args.check_schemas:
@@ -189,7 +198,11 @@ def main():
         sys.exit(1)
 
     for file_path in sorted(files):
-        rel_path = file_path.relative_to(REPO_ROOT) if file_path.is_relative_to(REPO_ROOT) else file_path
+        rel_path = (
+            file_path.relative_to(REPO_ROOT)
+            if file_path.is_relative_to(REPO_ROOT)
+            else file_path
+        )
 
         if file_path.suffix == ".jsonl":
             valid, err_count, errors = validate_jsonl(file_path, schema)
