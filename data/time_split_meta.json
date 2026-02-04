@@ -1,0 +1,19 @@
+{
+  "input": "/home/bob/InternetCondom/data/train_valid.jsonl",
+  "train_jsonl": "/home/bob/InternetCondom/data/train_time.jsonl",
+  "calib_jsonl": "/home/bob/InternetCondom/data/calib.jsonl",
+  "holdout_jsonl": "/home/bob/InternetCondom/data/holdout_time.jsonl",
+  "train_txt": "/home/bob/InternetCondom/data/train_time.txt",
+  "calib_txt": "/home/bob/InternetCondom/data/calib.txt",
+  "holdout_txt": "/home/bob/InternetCondom/data/holdout_time.txt",
+  "holdout_ratio": 0.1,
+  "calib_ratio": 0.1,
+  "total": 2619,
+  "train_count": 2097,
+  "calib_count": 261,
+  "holdout_count": 261,
+  "last_train_collected_at": "2026-02-01T01:36:00+00:00",
+  "first_calib_collected_at": "2026-02-01T01:36:00+00:00",
+  "last_calib_collected_at": "2026-02-01T11:38:00+00:00",
+  "first_holdout_collected_at": "2026-02-01T11:38:00+00:00"
+}

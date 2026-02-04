@@ -1,0 +1,26 @@
+{
+  "base": "/home/bob/InternetCondom/data/calib.txt",
+  "clean_pool": "/home/bob/InternetCondom/data/train_time_hn_calib.txt",
+  "holdout": "/home/bob/InternetCondom/data/holdout_time.txt",
+  "out": "/home/bob/InternetCondom/data/calib_rebalanced.txt",
+  "seed": 7,
+  "max_clean": null,
+  "base_counts": {
+    "crypto": 216,
+    "scam": 169,
+    "promo": 25,
+    "clean": 43
+  },
+  "out_counts": {
+    "crypto": 216,
+    "scam": 169,
+    "promo": 25,
+    "clean": 1300
+  },
+  "base_total": 261,
+  "added_clean": 1257,
+  "out_total": 1518,
+  "skipped_nonclean": 840,
+  "skipped_overlap": 129,
+  "pool_candidates": 1257
+}
