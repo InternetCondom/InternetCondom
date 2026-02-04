@@ -1,78 +1,89 @@
 # Internet Condom
 
-Local runnable models for filtering out crypto scam content, AI replies, and
-other undesirable content.
+A browser extension that filters crypto scams, AI-generated replies, and promotional spam from your social media feeds — entirely locally, with no network calls.
 
-## Scope (v0)
+## Install
 
-- Input: text content (DMs, posts, web text) with URL parsing.
-- Output: labels[] + confidence + optional reasons.
-- Classes: `scam`, `crypto`, `ai_generated_reply`, `promo`, `clean`.
-- Goal: low false positives, with user-adjustable thresholds.
-- Training note: you can cluster labels during training (merge into coarse super-classes) to improve performance, while keeping the dataset labels fine-grained.
+1. Clone or download this repo
+2. Open Chrome → `chrome://extensions`
+3. Enable **Developer mode** (top right)
+4. Click **Load unpacked** → select the `extension/` folder
+5. Pin the extension to your toolbar
 
-## Pipeline (minimal)
+## How It Works
 
-1. Parse text and extract URLs (and optionally wallet addresses).
-2. Rule features: scam domains, seed phrase / wallet-drainer phrases, etc.
-3. ML baseline: TF-IDF + Logistic Regression on CPU.
-4. Thresholding: per-class confidence cutoffs to keep false positives low.
+- **fastText model** runs in-browser via WebAssembly
+- **Content scripts** scan posts and DMs as you scroll
+- **Classification** into: `scam`, `crypto`, `promo`, `clean`
+- **Thresholds** are tunable per-class to control false positive rate
+- **Zero network calls** — all inference happens on your CPU
 
-## MVP fastText pipeline (Milestone A)
+## Model Performance
 
-Dependencies (Python):
+| Metric              | Value              |
+| ------------------- | ------------------ |
+| Model size          | 122 KB (quantized) |
+| Crypto recall       | 89%                |
+| False positive rate | < 2%               |
 
-- fastText Python bindings: `fasttext-wheel`
+Current thresholds (`extension/fasttext/thresholds.json`):
 
-Quick start:
+- `crypto`: 0.74
+- `scam`: 0.93
+- `promo`: 1.0 (disabled)
+- `clean`: 0.1
 
-```
-make prepare
-make train
-make eval
-```
+## Development
 
-Outputs:
+### Training pipeline
 
-- `data/train.txt`, `data/valid.txt` (fastText format)
-- `models/scam_detector.bin` (trained model)
-
-If you do not have fastText installed, create a virtual environment and install:
-
-```
+```bash
 python -m venv .venv
-. .venv/bin/activate
-python -m pip install fasttext-wheel
+source .venv/bin/activate
+pip install fasttext-wheel
+
+make prepare   # prepare train/valid splits
+make train     # train fastText model
+make eval      # evaluate on test set
 ```
 
-## Data
+### Extension development
 
-See `docs/LABELS.md` for labeling rules and `data/sample.jsonl` for the data shape.
-See `docs/DATA_MODEL.md` for schemas and storage patterns.
+The extension lives in `extension/`. Key files:
 
-Dataset creation is AI-first: use AI models to label scams at scale and
-source `ai_generated_reply` candidates by searching X for "AI reply". Ingestion is done
-entirely via OpenClaw (no scripts in this repo), using its provided browser to
-collect everything. Store provenance for every sample (platform, source id/url,
-timestamp). Preserve the original text and URLs without lossy transformations.
+- `manifest.json` — Chrome extension manifest (MV3)
+- `content-script.js` — injected into pages, scans DOM
+- `background.js` — service worker
+- `fasttext/` — WASM runtime + quantized model + thresholds
 
-**Note:** We collect data via UI scraping (browser automation), not the X API.
-This means we only capture fields visible in the DOM. See `docs/DATA_MODEL.md`
-for details on what fields are available and what's missing. Fill in what you
-can; partial records are fine for ML training.
+### Quantization
+
+Models are quantized to ~120KB using fastText's built-in quantization:
+
+- `cutoff=1000` (prune rare words)
+- `dsub=8` (product quantization)
+
+See `docs/QUANTIZATION.md` for the full grid search results.
 
 ## Documentation
 
-| Doc                                                                  | Description                            |
-| -------------------------------------------------------------------- | -------------------------------------- |
-| [docs/PLAN.md](docs/PLAN.md)                                         | Project roadmap and phases             |
-| [docs/TRAINING_INFERENCE_STACK.md](docs/TRAINING_INFERENCE_STACK.md) | SOTA training & inference architecture |
-| [docs/DATA_MODEL.md](docs/DATA_MODEL.md)                             | Schemas and storage patterns           |
-| [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)                         | Where to find data                     |
-| [docs/LABELS.md](docs/LABELS.md)                                     | Labeling rules and definitions         |
-| [docs/SOURCES.md](docs/SOURCES.md)                                   | Source tracking                        |
-| [docs/ACCOUNTS.md](docs/ACCOUNTS.md)                                 | Scam account registry                  |
+| Doc                                     | Description                          |
+| --------------------------------------- | ------------------------------------ |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design and data flow          |
+| [WASM_PLAN.md](docs/WASM_PLAN.md)       | WebAssembly integration strategy     |
+| [QUANTIZATION.md](docs/QUANTIZATION.md) | Model compression experiments        |
+| [LABELS.md](docs/LABELS.md)             | Labeling rules and class definitions |
+| [DATA_MODEL.md](docs/DATA_MODEL.md)     | Schemas and storage patterns         |
+| [DATA_SOURCES.md](docs/DATA_SOURCES.md) | Where training data comes from       |
+| [PLAN.md](docs/PLAN.md)                 | Project roadmap                      |
+| [EVAL_RESULTS.md](docs/EVAL_RESULTS.md) | Model evaluation results             |
 
-## Local-first
+## Data Collection
 
-No network calls required for classification. Models should run on CPU.
+Training data is collected via browser automation (UI scraping), not APIs. We use AI models to label scams at scale. All samples include provenance (platform, source URL, timestamp).
+
+See `docs/DATA_LABELING.md` for the labeling workflow.
+
+## Local-First
+
+No network calls. No telemetry. No cloud. Your browsing stays private.
