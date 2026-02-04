@@ -1,14 +1,14 @@
-import { loadScamThresholds, predictScam } from '../fasttext/scam-detector.js';
+import { loadScamThresholds, predictScam } from "../fasttext/scam-detector.js";
 
-const output = document.getElementById('output');
+const output = document.getElementById("output");
 const samples = [
   {
-    text: '🚀 FREE AIRDROP! Connect wallet now to claim your reward.',
-    note: 'scam-ish',
+    text: "🚀 FREE AIRDROP! Connect wallet now to claim your reward.",
+    note: "scam-ish",
   },
   {
-    text: 'Just finished my morning run and made breakfast. Feeling great today!',
-    note: 'clean-ish',
+    text: "Just finished my morning run and made breakfast. Feeling great today!",
+    note: "clean-ish",
   },
 ];
 

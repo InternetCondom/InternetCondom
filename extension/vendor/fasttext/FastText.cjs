@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
-Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 
-const index = require('./helpers/modules/index.cjs');
-const FastTextModel = require('./FastTextModel.cjs');
-const constants = require('./constants.cjs');
+const index = require("./helpers/modules/index.cjs");
+const FastTextModel = require("./FastTextModel.cjs");
+const constants = require("./constants.cjs");
 
 const getFastTextClass = async (options) => {
   const { getFastTextModule } = options;
@@ -37,61 +37,66 @@ const getFastTextClass = async (options) => {
       const fetchFunc = globalThis.fetch || fetch;
       const fastTextNative = this.ft;
       return new Promise((resolve, reject) => {
-        fetchFunc(url).then((response) => {
-          return response.arrayBuffer();
-        }).then((bytes) => {
-          const byteArray = new Uint8Array(bytes);
-          const FS = fastTextModule.FS;
-          FS.writeFile(constants.trainFileInWasmFs, byteArray);
-        }).then(() => {
-          const argsList = [
-            "lr",
-            "lrUpdateRate",
-            "dim",
-            "ws",
-            "epoch",
-            "minCount",
-            "minCountLabel",
-            "neg",
-            "wordNgrams",
-            "loss",
-            "model",
-            "bucket",
-            "minn",
-            "maxn",
-            "t",
-            "label",
-            "verbose",
-            "pretrainedVectors",
-            "saveOutput",
-            "seed",
-            "qout",
-            "retrain",
-            "qnorm",
-            "cutoff",
-            "dsub",
-            "qnorm",
-            "autotuneValidationFile",
-            "autotuneMetric",
-            "autotunePredictions",
-            "autotuneDuration",
-            "autotuneModelSize"
-          ];
-          const args = new fastTextModule.Args();
-          argsList.forEach((k) => {
-            if (k in kwargs) {
-              args[k] = kwargs[k];
-            }
+        fetchFunc(url)
+          .then((response) => {
+            return response.arrayBuffer();
+          })
+          .then((bytes) => {
+            const byteArray = new Uint8Array(bytes);
+            const FS = fastTextModule.FS;
+            FS.writeFile(constants.trainFileInWasmFs, byteArray);
+          })
+          .then(() => {
+            const argsList = [
+              "lr",
+              "lrUpdateRate",
+              "dim",
+              "ws",
+              "epoch",
+              "minCount",
+              "minCountLabel",
+              "neg",
+              "wordNgrams",
+              "loss",
+              "model",
+              "bucket",
+              "minn",
+              "maxn",
+              "t",
+              "label",
+              "verbose",
+              "pretrainedVectors",
+              "saveOutput",
+              "seed",
+              "qout",
+              "retrain",
+              "qnorm",
+              "cutoff",
+              "dsub",
+              "qnorm",
+              "autotuneValidationFile",
+              "autotuneMetric",
+              "autotunePredictions",
+              "autotuneDuration",
+              "autotuneModelSize",
+            ];
+            const args = new fastTextModule.Args();
+            argsList.forEach((k) => {
+              if (k in kwargs) {
+                args[k] = kwargs[k];
+              }
+            });
+            args.model = fastTextModule.ModelName[modelName];
+            args.loss =
+              "loss" in kwargs ? fastTextModule.LossName[kwargs.loss] : "hs";
+            args.thread = 1;
+            args.input = constants.trainFileInWasmFs;
+            fastTextNative.train(args, callback);
+            resolve(new FastTextModel.FastTextModel(fastTextNative, this.core));
+          })
+          .catch((error) => {
+            reject(error);
           });
-          args.model = fastTextModule.ModelName[modelName];
-          args.loss = "loss" in kwargs ? fastTextModule.LossName[kwargs.loss] : "hs";
-          args.thread = 1;
-          args.input = constants.trainFileInWasmFs;
-          fastTextNative.train(args, callback);
-          resolve(new FastTextModel.FastTextModel(fastTextNative, this.core));
-        }).catch((error) => {
-          reject(error);
-        });
       });
     }
     /**
@@ -103,11 +108,14 @@ const getFastTextClass = async (options) => {
     trainSupervised(url, kwargs = {}, callback) {
       const self = this;
       return new Promise((resolve, reject) => {
-        self._train(url, "supervised", kwargs, callback).then((model) => {
-          resolve(model);
-        }).catch((error) => {
-          reject(error);
-        });
+        self
+          ._train(url, "supervised", kwargs, callback)
+          .then((model) => {
+            resolve(model);
+          })
+          .catch((error) => {
+            reject(error);
+          });
       });
     }
     /**
@@ -127,11 +135,14 @@ const getFastTextClass = async (options) => {
     trainUnsupervised(url, modelName, kwargs = {}, callback) {
       const self = this;
       return new Promise((resolve, reject) => {
-        self._train(url, modelName, kwargs, callback).then((model) => {
-          resolve(model);
-        }).catch((error) => {
-          reject(error);
-        });
+        self
+          ._train(url, modelName, kwargs, callback)
+          .then((model) => {
+            resolve(model);
+          })
+          .catch((error) => {
+            reject(error);
+          });
       });
     }
   };

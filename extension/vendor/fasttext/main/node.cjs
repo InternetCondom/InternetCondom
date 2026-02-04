@@ -1,13 +1,11 @@
-'use strict';
+"use strict";
 
-Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 
-const node = require('../helpers/modules/node.cjs');
-const FastText = require('../FastText.cjs');
-const FastTextModel = require('../FastTextModel.cjs');
-const node$1 = require('../models/language-identification/node.cjs');
-
-
+const node = require("../helpers/modules/node.cjs");
+const FastText = require("../FastText.cjs");
+const FastTextModel = require("../FastTextModel.cjs");
+const node$1 = require("../models/language-identification/node.cjs");
 
 exports.getFastTextModule = node.getFastTextModule;
 exports.getFastTextClass = FastText.getFastTextClass;

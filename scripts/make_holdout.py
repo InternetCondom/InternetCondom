@@ -52,7 +52,9 @@ def write_fasttext(path: Path, rows: list[tuple[list[str], str]]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create a deterministic holdout split")
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT, help="Input JSONL")
-    parser.add_argument("--ratio", type=float, default=0.1, help="Holdout ratio (time-based)")
+    parser.add_argument(
+        "--ratio", type=float, default=0.1, help="Holdout ratio (time-based)"
+    )
     parser.add_argument(
         "--cutoff",
         type=str,
@@ -62,9 +64,15 @@ def main() -> None:
     parser.add_argument("--holdout-jsonl", type=Path, default=DEFAULT_HOLDOUT_JSONL)
     parser.add_argument("--holdout-txt", type=Path, default=DEFAULT_HOLDOUT_TXT)
     parser.add_argument("--meta-out", type=Path, default=DEFAULT_META)
-    parser.add_argument("--strip-urls", action="store_true", help="Remove URLs from text")
-    parser.add_argument("--no-normalize", action="store_true", help="Disable Unicode normalization")
-    parser.add_argument("--no-lowercase", action="store_true", help="Disable lowercasing")
+    parser.add_argument(
+        "--strip-urls", action="store_true", help="Remove URLs from text"
+    )
+    parser.add_argument(
+        "--no-normalize", action="store_true", help="Disable Unicode normalization"
+    )
+    parser.add_argument(
+        "--no-lowercase", action="store_true", help="Disable lowercasing"
+    )
     args = parser.parse_args()
 
     if args.ratio <= 0 or args.ratio >= 1:

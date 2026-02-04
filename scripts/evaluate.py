@@ -145,9 +145,13 @@ def evaluate(
     total_fn = sum(fn.values())
     micro_precision = safe_div(total_tp, total_tp + total_fp)
     micro_recall = safe_div(total_tp, total_tp + total_fn)
-    micro_f1 = safe_div(2 * micro_precision * micro_recall, micro_precision + micro_recall)
+    micro_f1 = safe_div(
+        2 * micro_precision * micro_recall, micro_precision + micro_recall
+    )
 
-    macro_precision = safe_div(sum(m["precision"] for m in metrics.values()), len(CLASSES))
+    macro_precision = safe_div(
+        sum(m["precision"] for m in metrics.values()), len(CLASSES)
+    )
     macro_recall = safe_div(sum(m["recall"] for m in metrics.values()), len(CLASSES))
     macro_f1 = safe_div(sum(m["f1"] for m in metrics.values()), len(CLASSES))
 
@@ -209,9 +213,13 @@ def tune_thresholds(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Evaluate fastText model (multi-label)")
+    parser = argparse.ArgumentParser(
+        description="Evaluate fastText model (multi-label)"
+    )
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL, help="Model file")
-    parser.add_argument("--valid", type=Path, default=DEFAULT_VALID, help="Validation file")
+    parser.add_argument(
+        "--valid", type=Path, default=DEFAULT_VALID, help="Validation file"
+    )
     parser.add_argument(
         "--threshold",
         type=float,

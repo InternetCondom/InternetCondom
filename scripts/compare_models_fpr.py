@@ -38,7 +38,9 @@ def load_rows(path: Path) -> list[tuple[set[str], str]]:
     return rows
 
 
-def best_threshold_for_label(points: list[tuple[float, bool]], target_fpr: float) -> tuple[float, float, float, float]:
+def best_threshold_for_label(
+    points: list[tuple[float, bool]], target_fpr: float
+) -> tuple[float, float, float, float]:
     candidates = sorted({score for score, _ in points})
     candidates.append(1.0)
 
@@ -83,7 +85,9 @@ def main() -> None:
         default="crypto,scam,promo",
         help="Comma-separated labels to evaluate",
     )
-    parser.add_argument("--csv", type=Path, default=None, help="Optional CSV output path")
+    parser.add_argument(
+        "--csv", type=Path, default=None, help="Optional CSV output path"
+    )
     args = parser.parse_args()
 
     if not args.holdout.exists():
@@ -120,20 +124,32 @@ def main() -> None:
             scores = eval_mod.get_scores(model, text)
             scored_rows.append((labels, scores))
         for label in label_list:
-            points = [(scores.get(label, 0.0), (label in labels)) for labels, scores in scored_rows]
-            thr, fpr, recall, precision = best_threshold_for_label(points, args.target_fpr)
+            points = [
+                (scores.get(label, 0.0), (label in labels))
+                for labels, scores in scored_rows
+            ]
+            thr, fpr, recall, precision = best_threshold_for_label(
+                points, args.target_fpr
+            )
             per_label[label] = {
                 "threshold": float(thr),
                 "fpr": float(fpr),
                 "recall": float(recall),
                 "precision": float(precision),
             }
-        per_label["_size_mb"] = {"threshold": size_mb, "fpr": 0.0, "recall": 0.0, "precision": 0.0}
+        per_label["_size_mb"] = {
+            "threshold": size_mb,
+            "fpr": 0.0,
+            "recall": 0.0,
+            "precision": 0.0,
+        }
         results[model_path.name] = per_label
 
     for label in label_list:
         print(f"\nLabel: {label} (target FPR <= {args.target_fpr:.2%})")
-        print(f"{'model':24s} {'sizeMB':>7s} {'thr':>7s} {'fpr':>7s} {'recall':>7s} {'prec':>7s}")
+        print(
+            f"{'model':24s} {'sizeMB':>7s} {'thr':>7s} {'fpr':>7s} {'recall':>7s} {'prec':>7s}"
+        )
         for model_name, per_label in results.items():
             size_mb = per_label["_size_mb"]["threshold"]
             stats = per_label[label]
@@ -150,7 +166,9 @@ def main() -> None:
         args.csv.parent.mkdir(parents=True, exist_ok=True)
         with args.csv.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.writer(handle)
-            writer.writerow(["model", "size_mb", "label", "threshold", "fpr", "recall", "precision"])
+            writer.writerow(
+                ["model", "size_mb", "label", "threshold", "fpr", "recall", "precision"]
+            )
             for model_name, per_label in results.items():
                 size_mb = per_label["_size_mb"]["threshold"]
                 for label in label_list:

@@ -1,19 +1,23 @@
-import { getFastTextClass, getFastTextModule } from '../vendor/fasttext/main/common.mjs';
+import {
+  getFastTextClass,
+  getFastTextModule,
+} from "../vendor/fasttext/main/common.mjs";
 
-const MODEL_FILENAME = 'model.ftz';
-const THRESHOLDS_FILENAME = 'thresholds.json';
-const CLASSES = ['clean', 'crypto', 'scam', 'promo'];
+const MODEL_FILENAME = "model.ftz";
+const THRESHOLDS_FILENAME = "thresholds.json";
+const CLASSES = ["clean", "crypto", "scam", "promo"];
 
 let modelPromise = null;
 let thresholdsPromise = null;
 let cachedThresholds = null;
 
 const normalizeText = (text) => {
-  if (!text) return '';
-  return String(text).replace(/\s+/g, ' ').trim();
+  if (!text) return "";
+  return String(text).replace(/\s+/g, " ").trim();
 };
 
-const defaultAssetUrl = (filename) => new URL(`./${filename}`, import.meta.url).toString();
+const defaultAssetUrl = (filename) =>
+  new URL(`./${filename}`, import.meta.url).toString();
 
 const defaultModelUrl = () => defaultAssetUrl(MODEL_FILENAME);
 
@@ -29,20 +33,33 @@ const defaultThresholdsUrl = (modelUrl) => {
 };
 
 const defaultWasmUrl = () => {
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
-    return chrome.runtime.getURL('vendor/fasttext/core/fastText.common.wasm');
+  if (
+    typeof chrome !== "undefined" &&
+    chrome.runtime &&
+    chrome.runtime.getURL
+  ) {
+    return chrome.runtime.getURL("vendor/fasttext/core/fastText.common.wasm");
   }
-  if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getURL) {
-    return browser.runtime.getURL('vendor/fasttext/core/fastText.common.wasm');
+  if (
+    typeof browser !== "undefined" &&
+    browser.runtime &&
+    browser.runtime.getURL
+  ) {
+    return browser.runtime.getURL("vendor/fasttext/core/fastText.common.wasm");
   }
-  return new URL('../vendor/fasttext/core/fastText.common.wasm', import.meta.url).toString();
+  return new URL(
+    "../vendor/fasttext/core/fastText.common.wasm",
+    import.meta.url,
+  ).toString();
 };
 
 const parseThresholds = (payload) => {
-  if (!payload || typeof payload !== 'object') return null;
+  if (!payload || typeof payload !== "object") return null;
   const raw =
-    payload.thresholds && typeof payload.thresholds === 'object' ? payload.thresholds : payload;
-  if (!raw || typeof raw !== 'object') return null;
+    payload.thresholds && typeof payload.thresholds === "object"
+      ? payload.thresholds
+      : payload;
+  if (!raw || typeof raw !== "object") return null;
   const parsed = {};
   for (const label of CLASSES) {
     if (raw[label] === undefined) continue;
@@ -58,7 +75,9 @@ const loadThresholds = async ({ thresholdsUrl, modelUrl } = {}) => {
   const url = thresholdsUrl || defaultThresholdsUrl(modelUrl);
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to load thresholds from ${url} (${response.status})`);
+    throw new Error(
+      `Failed to load thresholds from ${url} (${response.status})`,
+    );
   }
   const payload = await response.json();
   const parsed = parseThresholds(payload);
@@ -85,10 +104,12 @@ const buildThresholds = (perLabel, globalThreshold) => {
 
 export const loadScamThresholds = async ({ thresholdsUrl, modelUrl } = {}) => {
   if (!thresholdsPromise) {
-    thresholdsPromise = loadThresholds({ thresholdsUrl, modelUrl }).then((thresholds) => {
-      cachedThresholds = thresholds;
-      return thresholds;
-    });
+    thresholdsPromise = loadThresholds({ thresholdsUrl, modelUrl }).then(
+      (thresholds) => {
+        cachedThresholds = thresholds;
+        return thresholds;
+      },
+    );
   }
   return thresholdsPromise;
 };
@@ -100,8 +121,11 @@ export const loadScamModel = async ({ modelUrl, thresholdsUrl } = {}) => {
   if (!modelPromise) {
     modelPromise = (async () => {
       const wasmUrl = defaultWasmUrl();
-      const getFastTextModuleWithPath = () => getFastTextModule({ wasmPath: wasmUrl });
-      const FastText = await getFastTextClass({ getFastTextModule: getFastTextModuleWithPath });
+      const getFastTextModuleWithPath = () =>
+        getFastTextModule({ wasmPath: wasmUrl });
+      const FastText = await getFastTextClass({
+        getFastTextModule: getFastTextModuleWithPath,
+      });
       const ft = new FastText();
       return ft.loadModel(resolvedModelUrl);
     })();
@@ -121,20 +145,20 @@ export const predictScam = async (
   { thresholds, threshold, k = CLASSES.length, allowEmpty = false } = {},
 ) => {
   const model = await loadScamModel();
-  const cleaned = normalizeText(text).replace(/\n/g, ' ');
+  const cleaned = normalizeText(text).replace(/\n/g, " ");
   const rawPredictions = model.predict(cleaned, k, 0.0);
   const scores = {};
   for (const label of CLASSES) {
     scores[label] = 0;
   }
-  if (rawPredictions && typeof rawPredictions.size === 'function') {
+  if (rawPredictions && typeof rawPredictions.size === "function") {
     try {
       for (let i = 0; i < rawPredictions.size(); i += 1) {
         const item = rawPredictions.get(i);
         if (!item) continue;
         const prob = Number(item[0]);
         const label = String(item[1]);
-        const key = label.replace(/^__label__/, '');
+        const key = label.replace(/^__label__/, "");
         if (Number.isFinite(prob)) {
           const bounded = Math.min(1, Math.max(0, prob));
           if (key in scores) {
@@ -143,7 +167,7 @@ export const predictScam = async (
         }
       }
     } finally {
-      if (typeof rawPredictions.delete === 'function') {
+      if (typeof rawPredictions.delete === "function") {
         rawPredictions.delete();
       }
     }
@@ -157,31 +181,31 @@ export const predictScam = async (
     }
   }
   if (predicted.size === 0 && !allowEmpty) {
-    if (CLASSES.includes('clean')) {
-      predicted.add('clean');
+    if (CLASSES.includes("clean")) {
+      predicted.add("clean");
     } else {
       const bestLabel = Object.entries(scores).reduce(
         (best, entry) => (entry[1] > best[1] ? entry : best),
-        ['', -Infinity],
+        ["", -Infinity],
       )[0];
       if (bestLabel) {
         predicted.add(bestLabel);
       }
     }
   }
-  if (predicted.has('clean') && predicted.size > 1) {
-    predicted.delete('clean');
+  if (predicted.has("clean") && predicted.size > 1) {
+    predicted.delete("clean");
   }
   const labels = CLASSES.filter((label) => predicted.has(label));
   const pScam = scores.scam ?? 0;
-  const isScam = predicted.has('scam');
+  const isScam = predicted.has("scam");
 
   return {
     isScam,
     probability: pScam,
     threshold: appliedThresholds.scam,
     thresholds: appliedThresholds,
-    label: isScam ? 'scam' : labels[0] || 'clean',
+    label: isScam ? "scam" : labels[0] || "clean",
     labels,
     scores,
   };

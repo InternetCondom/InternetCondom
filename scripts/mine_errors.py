@@ -45,12 +45,22 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Mine fastText errors from labeled JSONL")
+    parser = argparse.ArgumentParser(
+        description="Mine fastText errors from labeled JSONL"
+    )
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL, help="Model file")
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT, help="Input JSONL file")
-    parser.add_argument("--threshold", type=float, default=0.5, help="Predict scam when p>=threshold")
-    parser.add_argument("--fp-out", type=Path, default=DEFAULT_FP_OUT, help="False positives JSONL")
-    parser.add_argument("--fn-out", type=Path, default=DEFAULT_FN_OUT, help="False negatives JSONL")
+    parser.add_argument(
+        "--input", type=Path, default=DEFAULT_INPUT, help="Input JSONL file"
+    )
+    parser.add_argument(
+        "--threshold", type=float, default=0.5, help="Predict scam when p>=threshold"
+    )
+    parser.add_argument(
+        "--fp-out", type=Path, default=DEFAULT_FP_OUT, help="False positives JSONL"
+    )
+    parser.add_argument(
+        "--fn-out", type=Path, default=DEFAULT_FN_OUT, help="False negatives JSONL"
+    )
     parser.add_argument(
         "--hard-negatives-out",
         type=Path,
@@ -63,9 +73,15 @@ def main() -> None:
         default=0,
         help="Max hard negatives to write (0 = all)",
     )
-    parser.add_argument("--strip-urls", action="store_true", help="Remove URLs from text")
-    parser.add_argument("--no-normalize", action="store_true", help="Disable Unicode normalization")
-    parser.add_argument("--no-lowercase", action="store_true", help="Disable lowercasing")
+    parser.add_argument(
+        "--strip-urls", action="store_true", help="Remove URLs from text"
+    )
+    parser.add_argument(
+        "--no-normalize", action="store_true", help="Disable Unicode normalization"
+    )
+    parser.add_argument(
+        "--no-lowercase", action="store_true", help="Disable lowercasing"
+    )
     args = parser.parse_args()
 
     if not args.model.exists():
@@ -124,7 +140,10 @@ def main() -> None:
             out["model_pred"] = pred
             false_positives.append(out)
             if hard_negatives_file is not None:
-                if args.hard_negatives_max == 0 or hard_negatives_written < args.hard_negatives_max:
+                if (
+                    args.hard_negatives_max == 0
+                    or hard_negatives_written < args.hard_negatives_max
+                ):
                     hard_negatives_file.write(f"__label__clean {cleaned}\n")
                     hard_negatives_written += 1
         elif label == "scam" and pred == "clean":
@@ -144,7 +163,9 @@ def main() -> None:
     print(f"False positives: {len(false_positives)} -> {args.fp_out}")
     print(f"False negatives: {len(false_negatives)} -> {args.fn_out}")
     if args.hard_negatives_out is not None:
-        print(f"Hard negatives written: {hard_negatives_written} -> {args.hard_negatives_out}")
+        print(
+            f"Hard negatives written: {hard_negatives_written} -> {args.hard_negatives_out}"
+        )
     if skipped_unknown or skipped_empty:
         print("Skipped rows:")
         print(f"  unknown label: {skipped_unknown}")

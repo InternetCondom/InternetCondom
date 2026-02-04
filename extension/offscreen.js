@@ -3,7 +3,7 @@ import {
   loadScamThresholds,
   predictScam,
   resetScamModel,
-} from './fasttext/scam-detector.js';
+} from "./fasttext/scam-detector.js";
 
 let queue = Promise.resolve();
 
@@ -27,7 +27,7 @@ const classifyTexts = async (texts) => {
 };
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (!message || message.type !== 'ic-infer-offscreen') {
+  if (!message || message.type !== "ic-infer-offscreen") {
     return undefined;
   }
 
@@ -38,7 +38,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     })
     .catch((err) => {
       resetScamModel();
-      sendResponse({ ok: false, error: String(err && err.stack ? err.stack : err) });
+      sendResponse({
+        ok: false,
+        error: String(err && err.stack ? err.stack : err),
+      });
     });
 
   return true;

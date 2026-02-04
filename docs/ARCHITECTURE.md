@@ -1,6 +1,7 @@
 # InternetCondom Architecture
 
 ## 1) Problem Statement
+
 X (Twitter) is the primary distribution channel for crypto scams: shill posts, rug-pull hype, impersonators, fake airdrops, wallet drainers, and malicious links. These scams move fast, exploit platform virality, and blend into legitimate crypto chatter. InternetCondom is a browser extension that detects scam content in X feeds and hides or warns users in real time. The system must be low-latency, resilient to adversarial wording, and continuously adaptable as scam tactics evolve.
 
 ## 2) Model Performance & Thresholds
@@ -9,11 +10,11 @@ X (Twitter) is the primary distribution channel for crypto scams: shill posts, r
 
 **Production threshold:** `0.90` (predict scam when P(scam) >= 0.90)
 
-| Threshold | FPR | Recall | Precision | Notes |
-|-----------|-----|--------|-----------|-------|
-| 0.50 | 12.9% | 84.3% | 85.2% | Default argmax - too many false positives |
-| 0.90 | 4.7% | 75.8% | 93.2% | **Production** - best FPR/recall tradeoff |
-| 0.95 | 2.4% | 68.5% | 96.0% | Conservative - use for high-stakes |
+| Threshold | FPR   | Recall | Precision | Notes                                     |
+| --------- | ----- | ------ | --------- | ----------------------------------------- |
+| 0.50      | 12.9% | 84.3%  | 85.2%     | Default argmax - too many false positives |
+| 0.90      | 4.7%  | 75.8%  | 93.2%     | **Production** - best FPR/recall tradeoff |
+| 0.95      | 2.4%  | 68.5%  | 96.0%     | Conservative - use for high-stakes        |
 
 **Key insight:** The model is well-calibrated. Higher threshold = fewer false positives but misses more scams. For a browser extension, users tolerate missing some scams better than wrongly flagging legitimate content.
 
@@ -22,6 +23,7 @@ X (Twitter) is the primary distribution channel for crypto scams: shill posts, r
 ---
 
 ## 3) Current MVP Architecture (fastText + Rules)
+
 The MVP uses a two-layer, on-device approach:
 
 - **Input:** Tweet text (plus minimal metadata when available).
@@ -35,6 +37,7 @@ The MVP uses a two-layer, on-device approach:
 Why this works now: it is fast, cheap to iterate, and runs locally. Why it will not scale: it is brittle to obfuscation, has limited context, and cannot generalize to evolving scam campaigns.
 
 ## 4) Target Production Architecture (Multi-Stage Pipeline)
+
 We are moving toward a modular, multi-stage pipeline that mixes fast heuristics, learned models, and campaign-level intelligence. The goal is to reduce false positives while catching coordinated scam clusters early.
 
 **Pipeline overview:**
@@ -76,31 +79,37 @@ We are moving toward a modular, multi-stage pipeline that mixes fast heuristics,
 This architecture supports fast local decisions with optional cloud enrichment when needed.
 
 ## 5) X-Specific Signals We Can Extract
+
 We should aggressively exploit X-specific context because scam signals are rarely just text.
 
 **Tweet-level:**
+
 - Text, emojis, hashtags, cashtags, mentions.
 - Calls-to-action ("claim", "airdrop", "mint", "DM", "connect wallet").
 - Media type (image/video/GIF), repeated meme templates.
 - Quoted/replied-to tweets and conversation context.
 
 **Profile-level:**
+
 - Account age, verified status, bio content.
 - Name/handle similarity to known brands.
 - Profile image reuse or stock image fingerprints.
 - Follower/following ratio and growth rate.
 
 **Engagement-level:**
+
 - Like/retweet velocity spikes.
 - Engagement sourced from low-quality/bot accounts.
 - Reply patterns (copy-paste shills, identical comments).
 
 **URL + Off-platform:**
+
 - Shortener expansions, redirect chains.
 - Domain age, registrar, known scam hosting.
 - Link to wallet connect, airdrop claim, or mint pages.
 
 **Campaign-level:**
+
 - Near-duplicate text across many posts.
 - Coordinated posting within tight time windows.
 - Shared domains or wallet addresses across accounts.
@@ -108,25 +117,30 @@ We should aggressively exploit X-specific context because scam signals are rarel
 ## 6) Phased Migration Plan (MVP → Production)
 
 **Phase 0: Stabilize MVP (Now)**
+
 - Improve training data quality, tighten rules, and add minimum telemetry.
 - Establish evaluation benchmarks (precision/recall on scam vs legit).
 
 **Phase 1: Instrumentation + Data Foundation**
+
 - Build a consistent data model for tweets, profiles, URLs.
 - Start logging feature snapshots for later offline training.
 - Add an internal label tool or workflow.
 
 **Phase 2: Multi-Stage Architecture (Local First)**
+
 - Introduce stage boundaries and score fusion.
 - Add link expansion + domain reputation lookups.
 - Keep everything local when possible for latency.
 
 **Phase 3: Campaign Detection + Behavioral Signals**
+
 - Add clustering of near-duplicate posts.
 - Profile-based heuristics and bot-likeness models.
 - Expand rules into data-driven heuristics.
 
 **Phase 4: Online Learning + Personalization**
+
 - Use user feedback and weak labels to update models.
 - Risk calibration by user tolerance (warn vs hide).
 

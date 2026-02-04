@@ -1,8 +1,8 @@
-const OFFSCREEN_URL = 'offscreen.html';
+const OFFSCREEN_URL = "offscreen.html";
 
 const ensureOffscreen = async () => {
   if (!chrome?.offscreen?.createDocument) {
-    throw new Error('chrome.offscreen API is unavailable.');
+    throw new Error("chrome.offscreen API is unavailable.");
   }
 
   if (chrome.offscreen.hasDocument) {
@@ -12,8 +12,8 @@ const ensureOffscreen = async () => {
 
   await chrome.offscreen.createDocument({
     url: OFFSCREEN_URL,
-    reasons: ['WORKERS'],
-    justification: 'Run fastText WASM inference without page CSP limitations.',
+    reasons: ["WORKERS"],
+    justification: "Run fastText WASM inference without page CSP limitations.",
   });
 };
 
@@ -30,7 +30,7 @@ const sendToOffscreen = (message) =>
   });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (!message || message.type !== 'ic-infer') {
+  if (!message || message.type !== "ic-infer") {
     return undefined;
   }
 
@@ -38,8 +38,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   (async () => {
     try {
       await ensureOffscreen();
-      const response = await sendToOffscreen({ type: 'ic-infer-offscreen', texts });
-      sendResponse(response || { ok: false, error: 'No response from offscreen' });
+      const response = await sendToOffscreen({
+        type: "ic-infer-offscreen",
+        texts,
+      });
+      sendResponse(
+        response || { ok: false, error: "No response from offscreen" },
+      );
     } catch (err) {
       sendResponse({
         ok: false,

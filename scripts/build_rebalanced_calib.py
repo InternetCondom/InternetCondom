@@ -65,9 +65,14 @@ def count_labels(lines: list[str]) -> Counter:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", type=Path, default=DEFAULT_BASE, help="Base calib.txt")
     parser.add_argument(
-        "--clean-pool", type=Path, default=DEFAULT_CLEAN_POOL, help="Clean-only pool (.txt)"
+        "--base", type=Path, default=DEFAULT_BASE, help="Base calib.txt"
+    )
+    parser.add_argument(
+        "--clean-pool",
+        type=Path,
+        default=DEFAULT_CLEAN_POOL,
+        help="Clean-only pool (.txt)",
     )
     parser.add_argument(
         "--holdout",
@@ -75,8 +80,12 @@ def main() -> None:
         default=DEFAULT_HOLDOUT,
         help="Holdout set to exclude (fastText txt)",
     )
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Output calib txt")
-    parser.add_argument("--meta-out", type=Path, default=DEFAULT_META, help="Output meta json")
+    parser.add_argument(
+        "--out", type=Path, default=DEFAULT_OUT, help="Output calib txt"
+    )
+    parser.add_argument(
+        "--meta-out", type=Path, default=DEFAULT_META, help="Output meta json"
+    )
     parser.add_argument(
         "--max-clean",
         type=int,

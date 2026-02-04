@@ -25,10 +25,10 @@ def load_model(model_path: Path):
         raise SystemExit(
             "fasttext is not installed. Install with: pip install fasttext-wheel"
         ) from exc
-    
+
     if not model_path.exists():
         raise SystemExit(f"Model file not found: {model_path}")
-    
+
     return fasttext.load_model(str(model_path))
 
 
@@ -77,7 +77,9 @@ def predict(
             scores[cls] = float(prob)
 
     applied_thresholds = build_thresholds(thresholds, threshold)
-    predicted = {cls for cls in CLASSES if scores.get(cls, 0.0) >= applied_thresholds[cls]}
+    predicted = {
+        cls for cls in CLASSES if scores.get(cls, 0.0) >= applied_thresholds[cls]
+    }
     if not predicted and not allow_empty:
         predicted = {"clean"} if "clean" in CLASSES else {max(scores, key=scores.get)}
     if "clean" in predicted and any(cls != "clean" for cls in predicted):
@@ -140,7 +142,9 @@ Examples:
     )
     parser.add_argument("--stdin", action="store_true", help="Read text from stdin")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
-    parser.add_argument("--batch", action="store_true", help="Process multiple lines from stdin")
+    parser.add_argument(
+        "--batch", action="store_true", help="Process multiple lines from stdin"
+    )
     args = parser.parse_args()
 
     model = load_model(args.model)

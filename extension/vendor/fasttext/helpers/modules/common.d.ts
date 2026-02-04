@@ -1,4 +1,4 @@
-import type { InitializeFastTextModuleOptions } from './types';
+import type { InitializeFastTextModuleOptions } from "./types";
 /**
  * If `document.currentScript.src` is falsy value, it will load `fasttext.common.wasm` from public root directly by default,
  *
@@ -6,5 +6,9 @@ import type { InitializeFastTextModuleOptions } from './types';
  *
  * You can also use `locateFile` callback to custom `fasttext.common.wasm` full path.
  */
-export declare function initializeFastTextModule(options?: InitializeFastTextModuleOptions): Promise<import("../../core/fastText.common").FastTextModule>;
-export declare function getFastTextModule(options?: InitializeFastTextModuleOptions): Promise<import("../../core/fastText.common").FastTextModule>;
+export declare function initializeFastTextModule(
+  options?: InitializeFastTextModuleOptions,
+): Promise<import("../../core/fastText.common").FastTextModule>;
+export declare function getFastTextModule(
+  options?: InitializeFastTextModuleOptions,
+): Promise<import("../../core/fastText.common").FastTextModule>;

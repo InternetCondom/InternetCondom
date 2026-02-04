@@ -52,11 +52,19 @@ def filter_training_file(path: Path, exclude_labels: set[str]) -> tuple[Path, in
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train fastText model")
-    parser.add_argument("--train", type=Path, default=DEFAULT_TRAIN, help="Training data file")
-    parser.add_argument("--model-out", type=Path, default=DEFAULT_MODEL, help="Output model file")
+    parser.add_argument(
+        "--train", type=Path, default=DEFAULT_TRAIN, help="Training data file"
+    )
+    parser.add_argument(
+        "--model-out", type=Path, default=DEFAULT_MODEL, help="Output model file"
+    )
     parser.add_argument("--word-ngrams", type=int, default=2, help="Word n-grams")
-    parser.add_argument("--minn", type=int, default=2, help="Min length of char n-grams (0 disables)")
-    parser.add_argument("--maxn", type=int, default=5, help="Max length of char n-grams (0 disables)")
+    parser.add_argument(
+        "--minn", type=int, default=2, help="Min length of char n-grams (0 disables)"
+    )
+    parser.add_argument(
+        "--maxn", type=int, default=5, help="Max length of char n-grams (0 disables)"
+    )
     parser.add_argument("--bucket", type=int, default=2000000, help="Number of buckets")
     parser.add_argument("--dim", type=int, default=100, help="Embedding dimension")
     parser.add_argument("--epoch", type=int, default=50, help="Training epochs")
