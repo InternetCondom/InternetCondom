@@ -1,4 +1,3 @@
 name = "janitr"
-main = "worker/index.js"
 compatibility_date = "2026-02-05"
-assets = { directory = "./webapp", binding = "ASSETS" }
+pages_build_output_dir = "webapp"
