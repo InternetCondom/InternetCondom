@@ -1,8 +1,8 @@
 {
-  "base": "/home/bob/InternetCondom/data/calib.txt",
-  "clean_pool": "/home/bob/InternetCondom/data/train_time_hn_calib.txt",
-  "holdout": "/home/bob/InternetCondom/data/holdout_time.txt",
-  "out": "/home/bob/InternetCondom/data/calib_rebalanced.txt",
+  "base": "/home/bob/janitr/data/calib.txt",
+  "clean_pool": "/home/bob/janitr/data/train_time_hn_calib.txt",
+  "holdout": "/home/bob/janitr/data/holdout_time.txt",
+  "out": "/home/bob/janitr/data/calib_rebalanced.txt",
   "seed": 7,
   "max_clean": null,
   "base_counts": {

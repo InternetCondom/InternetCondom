@@ -1,7 +1,7 @@
 {
-  "base": "/home/bob/InternetCondom/data/calib.txt",
+  "base": "/home/bob/janitr/data/calib.txt",
   "clean_pool": "data/hardneg_scam_top600.txt",
-  "holdout": "/home/bob/InternetCondom/data/holdout_time.txt",
+  "holdout": "/home/bob/janitr/data/holdout_time.txt",
   "out": "data/calib_rebalanced_hardneg600.txt",
   "seed": 7,
   "max_clean": null,
