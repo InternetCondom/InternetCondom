@@ -119,7 +119,7 @@ See [LABELS.md](https://github.com/janitrai/janitr/blob/main/LABELS.md) for deta
 ## Citation
 
 ```bibtex
-@dataset{internet_condom_2026,
+@dataset{janitr_2026,
   title={Janitr: Crypto Scam and AI Reply Detection Dataset},
   author={OpenClaw Contributors},
   year={2026},

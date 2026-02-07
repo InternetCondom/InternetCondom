@@ -1,5 +1,5 @@
 [project]
-name = "internetcondom"
+name = "janitr"
 version = "0.1.0"
 description = "Scam detection model for browser extension"
 readme = "README.md"
