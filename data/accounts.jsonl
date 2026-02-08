@@ -1,0 +1,86 @@
+{"handle": "BBCBreaking", "category": "media", "scrape_priority": "high", "labels": ["topic_news", "topic_world_news"], "notes": "Hard news, global"}
+{"handle": "Reuters", "category": "media", "scrape_priority": "high", "labels": ["topic_news", "topic_world_news"], "notes": "Wire service, factual"}
+{"handle": "AP", "category": "media", "scrape_priority": "high", "labels": ["topic_news"], "notes": "Wire service, factual"}
+{"handle": "nytimes", "category": "media", "scrape_priority": "high", "labels": ["topic_news"], "notes": "General news"}
+{"handle": "guardian", "category": "media", "scrape_priority": "medium", "labels": ["topic_news", "topic_world_news"], "notes": "General news, international"}
+{"handle": "CNN", "category": "media", "scrape_priority": "medium", "labels": ["topic_news"], "notes": "General news"}
+{"handle": "WIRED", "category": "media", "scrape_priority": "medium", "labels": ["topic_news", "topic_technology"], "notes": "Tech/science journalism"}
+{"handle": "TheEconomist", "category": "media", "scrape_priority": "medium", "labels": ["topic_news", "topic_finance"], "notes": "Economics, world affairs"}
+{"handle": "NPR", "category": "media", "scrape_priority": "medium", "labels": ["topic_news"], "notes": "Public radio, diverse topics"}
+{"handle": "WSJ", "category": "media", "scrape_priority": "medium", "labels": ["topic_news", "topic_finance"], "notes": "Finance + general"}
+{"handle": "espn", "category": "clean", "scrape_priority": "high", "labels": ["topic_sports"], "notes": "Sports news"}
+{"handle": "NBA", "category": "clean", "scrape_priority": "medium", "labels": ["topic_sports"], "notes": "Basketball"}
+{"handle": "NFL", "category": "clean", "scrape_priority": "medium", "labels": ["topic_sports"], "notes": "Football"}
+{"handle": "premierleague", "category": "clean", "scrape_priority": "medium", "labels": ["topic_sports"], "notes": "Soccer"}
+{"handle": "UEFA", "category": "clean", "scrape_priority": "medium", "labels": ["topic_sports"], "notes": "European soccer"}
+{"handle": "F1", "category": "clean", "scrape_priority": "medium", "labels": ["topic_sports"], "notes": "Formula 1"}
+{"handle": "MLB", "category": "clean", "scrape_priority": "low", "labels": ["topic_sports"], "notes": "Baseball"}
+{"handle": "FIFAWorldCup", "category": "clean", "scrape_priority": "low", "labels": ["topic_sports"], "notes": "Soccer, global"}
+{"handle": "UFC", "category": "clean", "scrape_priority": "low", "labels": ["topic_sports"], "notes": "MMA"}
+{"handle": "Variety", "category": "media", "scrape_priority": "medium", "labels": ["topic_entertainment", "topic_tv_movies"], "notes": "Film/TV industry"}
+{"handle": "RollingStone", "category": "media", "scrape_priority": "medium", "labels": ["topic_entertainment", "topic_music"], "notes": "Music + culture"}
+{"handle": "IGN", "category": "media", "scrape_priority": "medium", "labels": ["topic_gaming"], "notes": "Gaming"}
+{"handle": "RottenTomatoes", "category": "clean", "scrape_priority": "low", "labels": ["topic_tv_movies"], "notes": "Movie reviews"}
+{"handle": "billboard", "category": "media", "scrape_priority": "low", "labels": ["topic_music"], "notes": "Music charts"}
+{"handle": "netflix", "category": "clean", "scrape_priority": "medium", "labels": ["topic_entertainment", "topic_tv_movies"], "notes": "Streaming, pop culture"}
+{"handle": "NintendoAmerica", "category": "clean", "scrape_priority": "low", "labels": ["topic_gaming"], "notes": "Gaming"}
+{"handle": "PlayStation", "category": "clean", "scrape_priority": "low", "labels": ["topic_gaming"], "notes": "Gaming"}
+{"handle": "MarvelStudios", "category": "clean", "scrape_priority": "low", "labels": ["topic_entertainment"], "notes": "Entertainment"}
+{"handle": "NASA", "category": "clean", "scrape_priority": "high", "labels": ["topic_technology"], "notes": "Space, science"}
+{"handle": "NatGeo", "category": "clean", "scrape_priority": "medium", "labels": ["topic_news"], "notes": "Nature, science"}
+{"handle": "verge", "category": "media", "scrape_priority": "high", "labels": ["topic_technology"], "notes": "Tech news"}
+{"handle": "TechCrunch", "category": "media", "scrape_priority": "high", "labels": ["topic_technology", "topic_startups_vc"], "notes": "Tech/startup news"}
+{"handle": "github", "category": "clean", "scrape_priority": "medium", "labels": ["topic_programming_dev"], "notes": "Developer community"}
+{"handle": "MIT", "category": "clean", "scrape_priority": "low", "labels": ["topic_technology"], "notes": "Academic, research"}
+{"handle": "nature", "category": "clean", "scrape_priority": "low", "labels": ["topic_health"], "notes": "Scientific journal"}
+{"handle": "newscientist", "category": "media", "scrape_priority": "low", "labels": ["topic_technology", "topic_health"], "notes": "Science news"}
+{"handle": "GordonRamsay", "category": "influencer", "scrape_priority": "medium", "labels": ["topic_food_drink"], "notes": "Food, personality"}
+{"handle": "nytcooking", "category": "clean", "scrape_priority": "low", "labels": ["topic_food_drink"], "notes": "Food/recipes"}
+{"handle": "Airbnb", "category": "clean", "scrape_priority": "low", "labels": ["topic_travel"], "notes": "Travel"}
+{"handle": "NatGeoTravel", "category": "clean", "scrape_priority": "low", "labels": ["topic_travel"], "notes": "Travel"}
+{"handle": "Nike", "category": "clean", "scrape_priority": "low", "labels": ["topic_fitness"], "notes": "Sports/lifestyle brand"}
+{"handle": "TheOnion", "category": "clean", "scrape_priority": "medium", "labels": ["topic_comedy_memes"], "notes": "Satire"}
+{"handle": "dril", "category": "clean", "scrape_priority": "medium", "labels": ["topic_comedy_memes"], "notes": "Shitposting (clean-weird)"}
+{"handle": "MKBHD", "category": "influencer", "scrape_priority": "medium", "labels": ["topic_technology", "topic_consumer_electronics"], "notes": "Tech reviews, personality"}
+{"handle": "elonmusk", "category": "influencer", "scrape_priority": "high", "labels": ["topic_technology"], "notes": "High volume, mixed topics"}
+{"handle": "BillGates", "category": "influencer", "scrape_priority": "low", "labels": ["topic_technology", "topic_health"], "notes": "Philanthropy, tech, books"}
+{"handle": "POTUS", "category": "clean", "scrape_priority": "medium", "labels": ["topic_politics"], "notes": "US politics"}
+{"handle": "BBCPolitics", "category": "media", "scrape_priority": "low", "labels": ["topic_politics", "topic_news"], "notes": "UK politics"}
+{"handle": "politico", "category": "media", "scrape_priority": "medium", "labels": ["topic_politics", "topic_news"], "notes": "Political news"}
+{"handle": "FoxNews", "category": "media", "scrape_priority": "low", "labels": ["topic_politics", "topic_news"], "notes": "Conservative news"}
+{"handle": "MSNBC", "category": "media", "scrape_priority": "low", "labels": ["topic_politics", "topic_news"], "notes": "Liberal news"}
+{"handle": "ethereum", "category": "crypto", "scrape_priority": "high", "labels": ["topic_crypto"], "notes": "Ethereum foundation"}
+{"handle": "solana", "category": "crypto", "scrape_priority": "high", "labels": ["topic_crypto"], "notes": "Solana foundation"}
+{"handle": "bitcoin", "category": "crypto", "scrape_priority": "high", "labels": ["topic_crypto"], "notes": "Bitcoin community"}
+{"handle": "arbitrum", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "L2, active community"}
+{"handle": "optimismFND", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Optimism L2"}
+{"handle": "base", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Coinbase L2"}
+{"handle": "0xPolygon", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Polygon"}
+{"handle": "SuiNetwork", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Sui"}
+{"handle": "avax", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Avalanche"}
+{"handle": "cosmos", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto"], "notes": "Cosmos ecosystem"}
+{"handle": "cardano", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto"], "notes": "Cardano"}
+{"handle": "coinbase", "category": "crypto", "scrape_priority": "high", "labels": ["topic_crypto", "topic_finance"], "notes": "Major exchange"}
+{"handle": "binance", "category": "crypto", "scrape_priority": "high", "labels": ["topic_crypto", "topic_finance"], "notes": "Major exchange"}
+{"handle": "krakenfx", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto", "topic_finance"], "notes": "Kraken exchange"}
+{"handle": "Uniswap", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "DEX"}
+{"handle": "AaveAave", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto"], "notes": "DeFi lending"}
+{"handle": "MakerDAO", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto"], "notes": "DeFi stablecoin"}
+{"handle": "chainlink", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Oracle network"}
+{"handle": "etherscan", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto"], "notes": "Block explorer"}
+{"handle": "VitalikButerin", "category": "crypto", "scrape_priority": "high", "labels": ["topic_crypto"], "notes": "Ethereum co-founder"}
+{"handle": "balajis", "category": "influencer", "scrape_priority": "high", "labels": ["topic_crypto", "topic_technology"], "notes": "Tech/crypto thought leader"}
+{"handle": "punk6529", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "NFT/crypto culture"}
+{"handle": "cburniske", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto", "topic_investing"], "notes": "Placeholder VC"}
+{"handle": "hasufl", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Crypto researcher"}
+{"handle": "sassal0x", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Ethereum educator"}
+{"handle": "ljin18", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto", "topic_startups_vc"], "notes": "Crypto VC (Variant)"}
+{"handle": "rleshner", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto"], "notes": "Compound founder"}
+{"handle": "StarkWareLtd", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto"], "notes": "StarkWare, ZK research"}
+{"handle": "CoinDesk", "category": "media", "scrape_priority": "high", "labels": ["topic_crypto", "topic_news"], "notes": "Crypto journalism"}
+{"handle": "theblock__", "category": "media", "scrape_priority": "high", "labels": ["topic_crypto", "topic_news"], "notes": "Crypto journalism"}
+{"handle": "DeFi_Dad", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "DeFi educator"}
+{"handle": "messaricrypto", "category": "media", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Crypto research/data"}
+{"handle": "glassnode", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "On-chain analytics"}
+{"handle": "DuneAnalytics", "category": "crypto", "scrape_priority": "low", "labels": ["topic_crypto"], "notes": "On-chain data"}
+{"handle": "Bankless", "category": "media", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "Crypto media"}
