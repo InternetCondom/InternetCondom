@@ -152,3 +152,6 @@
 {"handle": "WuBlockchain", "category": "media", "scrape_priority": "medium", "labels": ["topic_crypto", "topic_news"], "notes": "Chinese crypto news"}
 {"handle": "thedefiedge", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "DeFi educator/analyst"}
 {"handle": "Route2FI", "category": "crypto", "scrape_priority": "medium", "labels": ["topic_crypto"], "notes": "DeFi strategies"}
+{"handle": "steipete", "category": "influencer", "scrape_priority": "medium", "labels": ["topic_programming_dev", "topic_technology"], "notes": "Peter Steinberger, iOS/Swift dev, founder PSPDFKit"}
+{"handle": "mitsuhiko", "category": "influencer", "scrape_priority": "medium", "labels": ["topic_programming_dev", "topic_technology"], "notes": "Armin Ronacher, creator of Flask/Ruff/Sentry"}
+{"handle": "badlogicgames", "category": "influencer", "scrape_priority": "medium", "labels": ["topic_programming_dev", "topic_gaming", "topic_technology"], "notes": "Mario Zechner, libGDX creator"}
