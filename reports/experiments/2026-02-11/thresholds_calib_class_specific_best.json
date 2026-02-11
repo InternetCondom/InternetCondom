@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "classes": [
+    "clean",
+    "topic_crypto",
+    "scam"
+  ],
+  "thresholds": {
+    "clean": 0.1,
+    "topic_crypto": 0.0005457804654724896,
+    "scam": 1.0
+  },
+  "tune_target_fpr_by_label": {
+    "topic_crypto": 0.2,
+    "scam": 0.01
+  },
+  "tuned_on": "data/calib.txt",
+  "tuned_at": "2026-02-11"
+}
