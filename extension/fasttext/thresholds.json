@@ -1,26 +1,30 @@
 {
-  "classes": ["clean", "topic_crypto", "scam"],
+  "classes": [
+    "clean",
+    "topic_crypto",
+    "scam"
+  ],
   "label_stats": {
     "scam": {
-      "fpr": 0.019662921348314606,
-      "precision": 0.954248366013072,
-      "recall": 0.6431718061674009,
-      "threshold": 0.9324633479118347
+      "fpr": 0.019637462235649546,
+      "precision": 0.9071428571428571,
+      "recall": 0.654639175257732,
+      "threshold": 0.7310686111450195
     },
     "topic_crypto": {
-      "fpr": 0.018255578093306288,
-      "precision": 0.7857142857142857,
-      "recall": 0.36666666666666664,
-      "threshold": 0.9124462008476257
+      "fpr": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "threshold": 1.0
     }
   },
   "thresholds": {
     "clean": 0.1,
-    "scam": 0.9324633479118347,
-    "topic_crypto": 0.9124462008476257
+    "scam": 0.7310686111450195,
+    "topic_crypto": 1.0
   },
   "tune_target_fpr": 0.02,
-  "tuned_at": "2026-02-07",
+  "tuned_at": "2026-02-11",
   "tuned_on": "data/valid.txt",
   "version": 2
 }
