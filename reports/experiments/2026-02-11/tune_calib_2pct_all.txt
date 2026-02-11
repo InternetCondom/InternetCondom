@@ -1,0 +1,6 @@
+Calibrating on 261 samples (target FPR <= 2.00%)
+label          thr     fpr  recall    prec
+topic_crypto  1.0000  1.0000  0.0000  0.0000
+scam        1.0000  1.0000  0.0000  0.0000
+
+Wrote thresholds to reports/experiments/2026-02-11/thresholds_calib_2pct_all.json

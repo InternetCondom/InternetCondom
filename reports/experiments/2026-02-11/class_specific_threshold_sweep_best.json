@@ -1,0 +1,38 @@
+{
+  "best_by_lowest_scam_fpr_then_recall": {
+    "target_scam": 0.01,
+    "target_topic": 0.2,
+    "thr_scam": 1.0,
+    "thr_topic": 0.0005457804654724896,
+    "holdout_scam_precision": 0.7916666666666666,
+    "holdout_scam_recall": 0.5588235294117647,
+    "holdout_scam_fpr": 0.09375,
+    "holdout_topic_precision": 0.8484848484848485,
+    "holdout_topic_recall": 0.33532934131736525,
+    "holdout_topic_fpr": 0.10526315789473684,
+    "holdout_micro_f1": 0.620472440944882,
+    "holdout_macro_f1": 0.6242337381117437,
+    "holdout_exact": 0.46564885496183206,
+    "calib_scam_fpr": 1.0,
+    "calib_topic_fpr": 0.15555555555555556
+  },
+  "best_with_scam_fpr_le_0_02": null,
+  "best_with_scam_fpr_le_0_05": null,
+  "best_by_micro_f1": {
+    "target_scam": 0.01,
+    "target_topic": 0.2,
+    "thr_scam": 1.0,
+    "thr_topic": 0.0005457804654724896,
+    "holdout_scam_precision": 0.7916666666666666,
+    "holdout_scam_recall": 0.5588235294117647,
+    "holdout_scam_fpr": 0.09375,
+    "holdout_topic_precision": 0.8484848484848485,
+    "holdout_topic_recall": 0.33532934131736525,
+    "holdout_topic_fpr": 0.10526315789473684,
+    "holdout_micro_f1": 0.620472440944882,
+    "holdout_macro_f1": 0.6242337381117437,
+    "holdout_exact": 0.46564885496183206,
+    "calib_scam_fpr": 1.0,
+    "calib_topic_fpr": 0.15555555555555556
+  }
+}
