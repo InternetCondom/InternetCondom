@@ -221,8 +221,11 @@ const processQueue = async () => {
           const result = results[i];
           if (!result) continue;
           const scores = result?.scores || {};
-          const { label, score } = pickTopLabel(scores);
-          const labelList = pickLabelList(scores);
+          const label =
+            typeof result?.label === "string" ? result.label : "clean";
+          const score =
+            typeof scores[label] === "number" ? scores[label] : Number.NaN;
+          const labelList = Array.isArray(result?.labels) ? result.labels : [];
           const pScam =
             typeof scores.scam === "number"
               ? scores.scam
