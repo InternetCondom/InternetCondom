@@ -38,12 +38,14 @@ Each callout gives us:
 
 **How to collect:**
 
-1. Search X for known tagging phrases: `"blocked for AI reply"`, `"AI reply" "blocked"`, `"bot reply"`, etc.
-2. Search for known taggers by handle: `from:<handle> "AI reply"`, etc.
+1. Search X for known taggers by handle: `from:<handle> "AI reply"`, `from:<handle> "blocked for AI reply"`, etc.
+2. Search X for common callout phrases without a `from:` filter to discover new taggers
 3. For each result, the tweet the tagger is replying to is the AI-generated reply
 4. Collect that reply + its parent post as a `replies.jsonl` entry
 5. Set `labels: ["ai_generated_reply"]`
 6. Set `notes` to reference the tagger and their exact callout
+
+**Search method:** Always use X **global search** with the `from:` operator (e.g. `from:levelsio "AI reply"`). The search box on a user's profile page does NOT scope results to that user — it just redirects to a generic global search. So profile-page search is useless for this; always use the `from:` operator in global search.
 
 **Key rule:** Only include replies in this file where we have an **explicit tag from a human on that specific reply**. No inference, no guessing.
 
