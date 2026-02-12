@@ -137,3 +137,11 @@ High-signal crypto accounts that produce legitimate, non-scam content. These hel
 - **Preserve full text** — do not truncate
 - **Tag source account** in metadata for provenance
 - **Mix time ranges** — do not just scrape today's posts, get a spread across recent weeks
+
+## AI Reply Scraping
+
+For AI-generated reply data collection, see **`docs/AI_REPLY_SCRAPING.md`** — a separate strategy doc covering:
+
+- Ground truth collection (levelsio's explicit "Blocked for AI reply" tags)
+- Inferred data (replies from flagged accounts, heuristic detection)
+- File separation rules (ground truth vs. inferred — never mixed)

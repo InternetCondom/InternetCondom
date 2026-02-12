@@ -163,6 +163,16 @@ Optional item fields:
 }
 ```
 
+## File Layout
+
+| File                               | Contents                                                                                                                          | Label confidence    |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `data/replies.jsonl`               | Replies **explicitly tagged** as AI by humans on X (e.g. someone replying "AI reply" / "blocked for AI reply" to a specific post) | High — ground truth |
+| `data/replies_inferred.jsonl`      | Replies we **suspect** are AI based on heuristics, account signals, or classifier output                                          | Lower — inferred    |
+| `data/flagged-ai-reply-bots.jsonl` | Account-level list of flagged AI reply bot handles (from any tagger)                                                              | Account-level only  |
+
+**Rule:** Never mix ground truth and inferred data. See `docs/AI_REPLY_SCRAPING.md` for the full scraping strategy.
+
 ## Validation
 
 Use the dedicated integrity checker:
