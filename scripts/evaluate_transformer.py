@@ -1,0 +1,509 @@
+#!/usr/bin/env python3
+"""Evaluate tiny-transformer model (torch or ONNX) on Janitr splits."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+import numpy as np
+import onnxruntime as ort
+import torch
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
+from transformers import BertConfig, BertModel, BertTokenizerFast
+
+from transformer_common import (
+    CONFIG_DIR,
+    DATA_DIR,
+    MODELS_DIR,
+    TRAINING_CLASSES,
+    PreparedRecord,
+    binary_pr_auc,
+    brier_score,
+    calibration_bins,
+    decision_from_probs,
+    exact_match_accuracy,
+    expected_calibration_error,
+    load_json,
+    load_prepared_rows,
+    micro_macro_from_metrics,
+    one_vs_all_metrics,
+    save_json,
+    safe_div,
+    sigmoid,
+    softmax,
+)
+
+DEFAULT_STUDENT_DIR = MODELS_DIR / "student"
+DEFAULT_VALID = DATA_DIR / "transformer" / "valid.prepared.jsonl"
+DEFAULT_HOLDOUT = DATA_DIR / "transformer" / "holdout.prepared.jsonl"
+DEFAULT_TRAIN = DATA_DIR / "transformer" / "train.prepared.jsonl"
+DEFAULT_THRESHOLD_OUT = CONFIG_DIR / "thresholds.transformer.json"
+
+
+class TinyStudentModel(nn.Module):
+    def __init__(self, config: BertConfig, teacher_hidden_size: int) -> None:
+        super().__init__()
+        self.bert = BertModel(config, add_pooling_layer=False)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.head_scam_clean = nn.Linear(config.hidden_size, 2)
+        self.head_topic = nn.Linear(config.hidden_size, 1)
+        self.teacher_projections = nn.ModuleList(
+            [nn.Linear(teacher_hidden_size, config.hidden_size) for _ in range(config.num_hidden_layers)]
+        )
+
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        out = self.bert(input_ids=input_ids, attention_mask=attention_mask, return_dict=True)
+        cls = self.dropout(out.last_hidden_state[:, 0])
+        return self.head_scam_clean(cls), self.head_topic(cls)
+
+
+class EvalDataset(Dataset):
+    def __init__(self, rows: list[PreparedRecord], tokenizer: BertTokenizerFast, max_length: int) -> None:
+        self.rows = rows
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+
+    def __len__(self) -> int:
+        return len(self.rows)
+
+    def __getitem__(self, idx: int) -> dict:
+        row = self.rows[idx]
+        enc = self.tokenizer(
+            row.text_normalized,
+            truncation=True,
+            padding="max_length",
+            max_length=self.max_length,
+            return_attention_mask=True,
+        )
+        return {
+            "input_ids": torch.tensor(enc["input_ids"], dtype=torch.long),
+            "attention_mask": torch.tensor(enc["attention_mask"], dtype=torch.long),
+        }
+
+
+def collate(batch: list[dict]) -> dict:
+    return {
+        "input_ids": torch.stack([x["input_ids"] for x in batch]),
+        "attention_mask": torch.stack([x["attention_mask"] for x in batch]),
+    }
+
+
+def load_student_torch(student_dir: Path) -> tuple[TinyStudentModel, BertTokenizerFast, dict]:
+    config_payload = load_json(student_dir / "student_config.json")
+    arch = config_payload["architecture"]
+
+    tokenizer = BertTokenizerFast.from_pretrained(str(student_dir / "tokenizer"))
+    config = BertConfig(
+        vocab_size=int(arch["vocab_size"]),
+        hidden_size=int(arch["hidden_size"]),
+        num_hidden_layers=int(arch["num_hidden_layers"]),
+        num_attention_heads=int(arch["num_attention_heads"]),
+        intermediate_size=int(arch["intermediate_size"]),
+        max_position_embeddings=max(128, int(arch["max_length"]) + 8),
+        hidden_dropout_prob=float(arch["dropout"]),
+        attention_probs_dropout_prob=float(arch["dropout"]),
+        type_vocab_size=1,
+        pad_token_id=tokenizer.pad_token_id,
+    )
+
+    model = TinyStudentModel(config, teacher_hidden_size=int(arch["teacher_hidden_size"]))
+    state = torch.load(student_dir / "pytorch_model.bin", map_location="cpu")
+    model.load_state_dict(state)
+    model.eval()
+    return model, tokenizer, config_payload
+
+
+def infer_probs_torch(
+    rows: list[PreparedRecord],
+    model: TinyStudentModel,
+    tokenizer: BertTokenizerFast,
+    *,
+    max_length: int,
+    batch_size: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    ds = EvalDataset(rows, tokenizer=tokenizer, max_length=max_length)
+    loader = DataLoader(ds, batch_size=batch_size, shuffle=False, collate_fn=collate)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    use_amp = device.type == "cuda"
+
+    scam_probs: list[float] = []
+    topic_probs: list[float] = []
+
+    with torch.no_grad():
+        for batch in loader:
+            input_ids = batch["input_ids"].to(device)
+            attention = batch["attention_mask"].to(device)
+            with torch.autocast(device_type=device.type, enabled=use_amp, dtype=torch.bfloat16):
+                scam_logits, topic_logits = model(input_ids=input_ids, attention_mask=attention)
+            scam_prob = softmax(scam_logits.detach().cpu().numpy())[:, 1]
+            topic_prob = sigmoid(topic_logits.detach().cpu().numpy().reshape(-1))
+            scam_probs.extend(scam_prob.tolist())
+            topic_probs.extend(topic_prob.tolist())
+
+    return np.array(scam_probs, dtype=np.float64), np.array(topic_probs, dtype=np.float64)
+
+
+def infer_probs_onnx(
+    rows: list[PreparedRecord],
+    onnx_path: Path,
+    tokenizer: BertTokenizerFast,
+    *,
+    max_length: int,
+    batch_size: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    ds = EvalDataset(rows, tokenizer=tokenizer, max_length=max_length)
+    loader = DataLoader(ds, batch_size=batch_size, shuffle=False, collate_fn=collate)
+
+    providers = ["CPUExecutionProvider"]
+    session = ort.InferenceSession(str(onnx_path), providers=providers)
+
+    scam_probs: list[float] = []
+    topic_probs: list[float] = []
+    for batch in loader:
+        out = session.run(
+            ["scam_logits", "topic_logits"],
+            {
+                "input_ids": batch["input_ids"].numpy(),
+                "attention_mask": batch["attention_mask"].numpy(),
+            },
+        )
+        scam_prob = softmax(out[0])[:, 1]
+        topic_prob = sigmoid(out[1].reshape(-1))
+        scam_probs.extend(scam_prob.tolist())
+        topic_probs.extend(topic_prob.tolist())
+    return np.array(scam_probs, dtype=np.float64), np.array(topic_probs, dtype=np.float64)
+
+
+def predict_labels(
+    scam_probs: np.ndarray,
+    topic_probs: np.ndarray,
+    *,
+    scam_threshold: float,
+    topic_threshold: float,
+) -> list[str]:
+    preds: list[str] = []
+    for s_prob, t_prob in zip(scam_probs, topic_probs):
+        preds.append(
+            decision_from_probs(
+                float(s_prob),
+                float(t_prob),
+                scam_threshold=scam_threshold,
+                topic_threshold=topic_threshold,
+            )
+        )
+    return preds
+
+
+def compute_metrics(
+    *,
+    rows: list[PreparedRecord],
+    scam_probs: np.ndarray,
+    topic_probs: np.ndarray,
+    scam_threshold: float,
+    topic_threshold: float,
+    train_handles: set[str],
+) -> dict:
+    y_true = [row.collapsed_label for row in rows]
+    preds = predict_labels(
+        scam_probs,
+        topic_probs,
+        scam_threshold=scam_threshold,
+        topic_threshold=topic_threshold,
+    )
+
+    per_class = one_vs_all_metrics(y_true, preds, classes=TRAINING_CLASSES)
+    mm = micro_macro_from_metrics(per_class)
+
+    y_scam = [1 if label == "scam" else 0 for label in y_true]
+    scam_auc = binary_pr_auc(y_scam, scam_probs.tolist())
+    scam_bins = calibration_bins(y_scam, scam_probs.tolist(), bins=10)
+
+    metrics = {
+        "metrics": {
+            label: {
+                "precision": vals["precision"],
+                "recall": vals["recall"],
+                "f1": vals["f1"],
+                "fpr": vals["fpr"],
+                "fnr": vals["fnr"],
+                "support": vals["support"],
+            }
+            for label, vals in per_class.items()
+        },
+        "exact_match": exact_match_accuracy(y_true, preds),
+        "micro": mm["micro"],
+        "macro": mm["macro"],
+        "pr_auc": {
+            "scam": scam_auc,
+        },
+        "calibration": {
+            "scam_bins": scam_bins,
+            "scam_ece": expected_calibration_error(scam_bins),
+            "scam_brier": brier_score(y_scam, scam_probs.tolist()),
+        },
+    }
+
+    subgroup_masks = {
+        "short_posts_lt_40": [len(row.text_normalized) < 40 for row in rows],
+        "with_url": [row.has_url for row in rows],
+        "without_url": [not row.has_url for row in rows],
+        "seen_handles": [
+            (row.author_handle in train_handles) if row.author_handle is not None else False
+            for row in rows
+        ],
+        "unseen_handles": [
+            (row.author_handle not in train_handles) if row.author_handle is not None else True
+            for row in rows
+        ],
+    }
+
+    subgroup_metrics: dict[str, dict] = {}
+    for name, mask in subgroup_masks.items():
+        idxs = [idx for idx, flag in enumerate(mask) if flag]
+        if not idxs:
+            subgroup_metrics[name] = {
+                "samples": 0,
+                "metrics": None,
+            }
+            continue
+
+        sub_rows = [rows[idx] for idx in idxs]
+        sub_scam = scam_probs[idxs]
+        sub_topic = topic_probs[idxs]
+
+        sub_y_true = [row.collapsed_label for row in sub_rows]
+        sub_preds = predict_labels(
+            sub_scam,
+            sub_topic,
+            scam_threshold=scam_threshold,
+            topic_threshold=topic_threshold,
+        )
+        sub_per_class = one_vs_all_metrics(sub_y_true, sub_preds, classes=TRAINING_CLASSES)
+        subgroup_metrics[name] = {
+            "samples": len(sub_rows),
+            "metrics": {
+                label: {
+                    "precision": vals["precision"],
+                    "recall": vals["recall"],
+                    "f1": vals["f1"],
+                    "fpr": vals["fpr"],
+                    "fnr": vals["fnr"],
+                    "support": vals["support"],
+                }
+                for label, vals in sub_per_class.items()
+            },
+        }
+
+    metrics["subgroups"] = subgroup_metrics
+    return metrics
+
+
+def tune_thresholds_for_scam_fpr(
+    rows: list[PreparedRecord],
+    scam_probs: np.ndarray,
+    topic_probs: np.ndarray,
+    *,
+    target_scam_fpr: float,
+    step: float,
+) -> tuple[float, float, dict]:
+    y_true = [row.collapsed_label for row in rows]
+    best = None
+
+    scam_grid = np.arange(0.5, 1.0001, step)
+    topic_grid = np.arange(0.5, 1.0001, step)
+
+    for scam_thr in scam_grid:
+        for topic_thr in topic_grid:
+            preds = predict_labels(
+                scam_probs,
+                topic_probs,
+                scam_threshold=float(scam_thr),
+                topic_threshold=float(topic_thr),
+            )
+            per_class = one_vs_all_metrics(y_true, preds, classes=TRAINING_CLASSES)
+            scam_m = per_class["scam"]
+            if scam_m["fpr"] > target_scam_fpr:
+                continue
+            mm = micro_macro_from_metrics(per_class)
+            candidate = (
+                scam_m["recall"],
+                scam_m["precision"],
+                mm["macro"]["f1"],
+                float(scam_thr),
+                float(topic_thr),
+                {
+                    "metrics": {
+                        label: {
+                            "precision": vals["precision"],
+                            "recall": vals["recall"],
+                            "f1": vals["f1"],
+                            "fpr": vals["fpr"],
+                            "fnr": vals["fnr"],
+                            "support": vals["support"],
+                        }
+                        for label, vals in per_class.items()
+                    },
+                    "macro": mm["macro"],
+                    "micro": mm["micro"],
+                },
+            )
+            if best is None or candidate[:3] > best[:3]:
+                best = candidate
+
+    if best is None:
+        # Fallback to high threshold that minimizes FPR.
+        scam_thr = 0.99
+        topic_thr = 0.99
+        preds = predict_labels(
+            scam_probs,
+            topic_probs,
+            scam_threshold=scam_thr,
+            topic_threshold=topic_thr,
+        )
+        per_class = one_vs_all_metrics(y_true, preds, classes=TRAINING_CLASSES)
+        mm = micro_macro_from_metrics(per_class)
+        return scam_thr, topic_thr, {
+            "metrics": {
+                label: {
+                    "precision": vals["precision"],
+                    "recall": vals["recall"],
+                    "f1": vals["f1"],
+                    "fpr": vals["fpr"],
+                    "fnr": vals["fnr"],
+                    "support": vals["support"],
+                }
+                for label, vals in per_class.items()
+            },
+            "macro": mm["macro"],
+            "micro": mm["micro"],
+            "note": "No thresholds met target scam FPR; used conservative fallback 0.99/0.99.",
+        }
+
+    return best[3], best[4], best[5]
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--student-dir", type=Path, default=DEFAULT_STUDENT_DIR)
+    parser.add_argument("--valid", type=Path, default=DEFAULT_VALID)
+    parser.add_argument("--holdout", type=Path, default=DEFAULT_HOLDOUT)
+    parser.add_argument("--train", type=Path, default=DEFAULT_TRAIN)
+    parser.add_argument("--onnx", type=Path, default=None, help="If set, evaluate this ONNX model")
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--max-length", type=int, default=96)
+    parser.add_argument("--target-scam-fpr", type=float, default=0.02)
+    parser.add_argument("--threshold-step", type=float, default=0.01)
+    parser.add_argument(
+        "--thresholds-out",
+        type=Path,
+        default=DEFAULT_THRESHOLD_OUT,
+        help="Write tuned thresholds JSON",
+    )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=MODELS_DIR / "student_holdout_eval.json",
+    )
+    args = parser.parse_args()
+
+    for path in (args.student_dir, args.valid, args.holdout, args.train):
+        if not path.exists():
+            raise SystemExit(f"Missing required path: {path}")
+
+    valid_rows = load_prepared_rows(args.valid)
+    holdout_rows = load_prepared_rows(args.holdout)
+    train_rows = load_prepared_rows(args.train)
+    train_handles = {row.author_handle for row in train_rows if row.author_handle}
+
+    model, tokenizer, student_cfg = load_student_torch(args.student_dir)
+    max_length = int(student_cfg["architecture"].get("max_length", args.max_length))
+
+    if args.onnx is None:
+        valid_scam, valid_topic = infer_probs_torch(
+            valid_rows,
+            model,
+            tokenizer,
+            max_length=max_length,
+            batch_size=args.batch_size,
+        )
+        holdout_scam, holdout_topic = infer_probs_torch(
+            holdout_rows,
+            model,
+            tokenizer,
+            max_length=max_length,
+            batch_size=args.batch_size,
+        )
+        engine = "torch"
+    else:
+        if not args.onnx.exists():
+            raise SystemExit(f"ONNX model not found: {args.onnx}")
+        valid_scam, valid_topic = infer_probs_onnx(
+            valid_rows,
+            onnx_path=args.onnx,
+            tokenizer=tokenizer,
+            max_length=max_length,
+            batch_size=args.batch_size,
+        )
+        holdout_scam, holdout_topic = infer_probs_onnx(
+            holdout_rows,
+            onnx_path=args.onnx,
+            tokenizer=tokenizer,
+            max_length=max_length,
+            batch_size=args.batch_size,
+        )
+        engine = "onnx"
+
+    scam_thr, topic_thr, valid_threshold_metrics = tune_thresholds_for_scam_fpr(
+        valid_rows,
+        valid_scam,
+        valid_topic,
+        target_scam_fpr=args.target_scam_fpr,
+        step=args.threshold_step,
+    )
+
+    threshold_payload = {
+        "version": 1,
+        "engine": engine,
+        "thresholds": {
+            "scam": scam_thr,
+            "topic_crypto": topic_thr,
+        },
+        "tune_target_scam_fpr": args.target_scam_fpr,
+        "valid_metrics_at_threshold": valid_threshold_metrics,
+    }
+    save_json(args.thresholds_out, threshold_payload)
+
+    holdout_metrics = compute_metrics(
+        rows=holdout_rows,
+        scam_probs=holdout_scam,
+        topic_probs=holdout_topic,
+        scam_threshold=scam_thr,
+        topic_threshold=topic_thr,
+        train_handles=train_handles,
+    )
+
+    report = {
+        "engine": engine,
+        "onnx_path": str(args.onnx) if args.onnx else None,
+        "thresholds": threshold_payload,
+        "holdout": holdout_metrics,
+    }
+    save_json(args.out, report)
+
+    scam = holdout_metrics["metrics"]["scam"]
+    print(f"Engine: {engine}")
+    print(f"Thresholds: scam={scam_thr:.4f}, topic_crypto={topic_thr:.4f}")
+    print(
+        "Holdout scam metrics: "
+        f"precision={scam['precision']:.4f} recall={scam['recall']:.4f} fpr={scam['fpr']:.4f}"
+    )
+    print(f"Wrote thresholds to {args.thresholds_out}")
+    print(f"Wrote evaluation report to {args.out}")
+
+
+if __name__ == "__main__":
+    main()

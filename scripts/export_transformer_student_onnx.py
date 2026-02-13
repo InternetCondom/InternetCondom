@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+"""Export distilled tiny student to ONNX and validate torch/ORT parity."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+import numpy as np
+import onnxruntime as ort
+import torch
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
+from transformers import BertConfig, BertModel, BertTokenizerFast
+
+from transformer_common import DATA_DIR, MODELS_DIR, decision_from_probs, load_json, load_prepared_rows, sigmoid, softmax
+
+DEFAULT_STUDENT_DIR = MODELS_DIR / "student"
+DEFAULT_VALID = DATA_DIR / "transformer" / "valid.prepared.jsonl"
+DEFAULT_OUT = MODELS_DIR / "student.onnx"
+
+
+class TinyStudentModel(nn.Module):
+    def __init__(self, config: BertConfig, teacher_hidden_size: int) -> None:
+        super().__init__()
+        self.bert = BertModel(config, add_pooling_layer=False)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.head_scam_clean = nn.Linear(config.hidden_size, 2)
+        self.head_topic = nn.Linear(config.hidden_size, 1)
+        self.teacher_projections = nn.ModuleList(
+            [nn.Linear(teacher_hidden_size, config.hidden_size) for _ in range(config.num_hidden_layers)]
+        )
+
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        out = self.bert(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            return_dict=True,
+        )
+        cls = self.dropout(out.last_hidden_state[:, 0])
+        scam_logits = self.head_scam_clean(cls)
+        topic_logits = self.head_topic(cls)
+        return scam_logits, topic_logits
+
+
+class EvalDataset(Dataset):
+    def __init__(self, rows, tokenizer: BertTokenizerFast, max_length: int) -> None:
+        self.rows = rows
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+
+    def __len__(self) -> int:
+        return len(self.rows)
+
+    def __getitem__(self, idx: int):
+        row = self.rows[idx]
+        enc = self.tokenizer(
+            row.text_normalized,
+            truncation=True,
+            padding="max_length",
+            max_length=self.max_length,
+            return_attention_mask=True,
+        )
+        return {
+            "collapsed_label": row.collapsed_label,
+            "input_ids": torch.tensor(enc["input_ids"], dtype=torch.long),
+            "attention_mask": torch.tensor(enc["attention_mask"], dtype=torch.long),
+        }
+
+
+def collate(batch: list[dict]) -> dict:
+    return {
+        "collapsed_label": [x["collapsed_label"] for x in batch],
+        "input_ids": torch.stack([x["input_ids"] for x in batch]),
+        "attention_mask": torch.stack([x["attention_mask"] for x in batch]),
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--student-dir", type=Path, default=DEFAULT_STUDENT_DIR)
+    parser.add_argument("--valid", type=Path, default=DEFAULT_VALID)
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--opset", type=int, default=17)
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--parity-samples", type=int, default=1000)
+    parser.add_argument("--max-length", type=int, default=96)
+    parser.add_argument("--max-mean-delta", type=float, default=0.01)
+    parser.add_argument("--min-label-agreement", type=float, default=0.99)
+    args = parser.parse_args()
+
+    config_path = args.student_dir / "student_config.json"
+    model_path = args.student_dir / "pytorch_model.bin"
+    tokenizer_dir = args.student_dir / "tokenizer"
+
+    for path in (config_path, model_path, tokenizer_dir, args.valid):
+        if not Path(path).exists():
+            raise SystemExit(f"Missing required input: {path}")
+
+    payload = load_json(config_path)
+    arch = payload["architecture"]
+    thresholds = payload.get("thresholds", {"scam": 0.5, "topic_crypto": 0.5})
+
+    tokenizer = BertTokenizerFast.from_pretrained(str(tokenizer_dir))
+    config = BertConfig(
+        vocab_size=int(arch["vocab_size"]),
+        hidden_size=int(arch["hidden_size"]),
+        num_hidden_layers=int(arch["num_hidden_layers"]),
+        num_attention_heads=int(arch["num_attention_heads"]),
+        intermediate_size=int(arch["intermediate_size"]),
+        max_position_embeddings=max(128, int(arch["max_length"]) + 8),
+        hidden_dropout_prob=float(arch["dropout"]),
+        attention_probs_dropout_prob=float(arch["dropout"]),
+        type_vocab_size=1,
+        pad_token_id=tokenizer.pad_token_id,
+    )
+    model = TinyStudentModel(config, teacher_hidden_size=int(arch["teacher_hidden_size"]))
+    state = torch.load(model_path, map_location="cpu")
+    model.load_state_dict(state)
+    model.eval()
+
+    dummy_input_ids = torch.ones((1, args.max_length), dtype=torch.long)
+    dummy_attention = torch.ones((1, args.max_length), dtype=torch.long)
+
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    torch.onnx.export(
+        model,
+        (dummy_input_ids, dummy_attention),
+        str(args.out),
+        input_names=["input_ids", "attention_mask"],
+        output_names=["scam_logits", "topic_logits"],
+        dynamic_axes={
+            "input_ids": {0: "batch"},
+            "attention_mask": {0: "batch"},
+            "scam_logits": {0: "batch"},
+            "topic_logits": {0: "batch"},
+        },
+        opset_version=args.opset,
+        dynamo=False,
+    )
+    print(f"Exported ONNX model to {args.out}")
+
+    rows = load_prepared_rows(args.valid)
+    rows = rows[: min(len(rows), args.parity_samples)]
+    dataset = EvalDataset(rows, tokenizer=tokenizer, max_length=args.max_length)
+    loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, collate_fn=collate)
+
+    ort_session = ort.InferenceSession(str(args.out), providers=["CPUExecutionProvider"])
+
+    deltas: list[float] = []
+    matches = 0
+    total = 0
+
+    scam_thr = float(thresholds.get("scam", 0.5))
+    topic_thr = float(thresholds.get("topic_crypto", 0.5))
+
+    with torch.no_grad():
+        for batch in loader:
+            input_ids = batch["input_ids"]
+            attention = batch["attention_mask"]
+
+            torch_scam, torch_topic = model(input_ids=input_ids, attention_mask=attention)
+            torch_scam_prob = softmax(torch_scam.numpy())[:, 1]
+            torch_topic_prob = sigmoid(torch_topic.numpy().reshape(-1))
+
+            ort_out = ort_session.run(
+                ["scam_logits", "topic_logits"],
+                {
+                    "input_ids": input_ids.numpy(),
+                    "attention_mask": attention.numpy(),
+                },
+            )
+            ort_scam_prob = softmax(ort_out[0])[:, 1]
+            ort_topic_prob = sigmoid(ort_out[1].reshape(-1))
+
+            delta = np.abs(torch_scam_prob - ort_scam_prob) + np.abs(torch_topic_prob - ort_topic_prob)
+            deltas.extend((delta / 2.0).tolist())
+
+            for ts, tt, os, ot in zip(torch_scam_prob, torch_topic_prob, ort_scam_prob, ort_topic_prob):
+                torch_label = decision_from_probs(
+                    float(ts), float(tt), scam_threshold=scam_thr, topic_threshold=topic_thr
+                )
+                ort_label = decision_from_probs(
+                    float(os), float(ot), scam_threshold=scam_thr, topic_threshold=topic_thr
+                )
+                matches += int(torch_label == ort_label)
+                total += 1
+
+    mean_delta = float(np.mean(deltas)) if deltas else 0.0
+    label_agreement = float(matches / total) if total else 1.0
+
+    print(f"Parity mean abs prob delta: {mean_delta:.6f}")
+    print(f"Parity label agreement: {label_agreement:.4%} ({matches}/{total})")
+
+    if mean_delta > args.max_mean_delta:
+        raise SystemExit(
+            f"Parity check failed: mean abs probability delta {mean_delta:.6f} > {args.max_mean_delta:.6f}"
+        )
+    if label_agreement < args.min_label_agreement:
+        raise SystemExit(
+            f"Parity check failed: label agreement {label_agreement:.4%} < {args.min_label_agreement:.4%}"
+        )
+
+
+if __name__ == "__main__":
+    main()
