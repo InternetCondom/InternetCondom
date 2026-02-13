@@ -367,8 +367,8 @@ def evaluate_loader(
             )
             with amp_ctx:
                 out = model(input_ids=input_ids, attention_mask=attention_mask)
-            scam_logits = out["scam_logits"].detach().cpu().numpy()
-            topic_logits = out["topic_logits"].detach().cpu().numpy().reshape(-1)
+            scam_logits = out["scam_logits"].detach().cpu().float().numpy()
+            topic_logits = out["topic_logits"].detach().cpu().float().numpy().reshape(-1)
 
             scam_probs = softmax(scam_logits)[:, 1]
             topic_probs = sigmoid(topic_logits)

@@ -102,6 +102,14 @@ Tokenizer artifacts to ship with model:
 - `tokenizer_config.json`
 - `vocab.txt` (if needed by runtime tooling)
 
+Production guardrails for tokenizer (required):
+
+- Build tokenizer once from train corpus and treat artifacts as immutable per run.
+- Load tokenizer using a single canonical path that guarantees vocab ingestion (for example `from_pretrained()` with a valid `tokenizer.json`, or constructor argument `vocab=...` for this Transformers API).
+- Fail fast if backend tokenizer vocab size is not equal to expected `vocab_size`.
+- Fail fast if sampled `UNK` ratio is unexpectedly high (for example > `5%` on train/valid sample).
+- Emit tokenizer sanity stats (backend vocab size, unk ratio, sample tokenization) into the evaluation report.
+
 ## Data Preparation Plan (Janitr labels and splits)
 
 ### 1) Build transformer prep script aligned with current datasets
@@ -339,6 +347,7 @@ This fits Janitr's stated browser model target range when using int8.
 - Create `scripts/export_transformer_student_onnx.py`
 - Create `scripts/quantize_transformer_student.py`
 - Create `scripts/evaluate_transformer.py`
+- Add tokenizer fail-fast validation in student training/eval path (backend vocab size + UNK ratio checks)
 
 ### Milestone 2: Model artifacts
 
@@ -346,6 +355,7 @@ This fits Janitr's stated browser model target range when using int8.
 - Distill student with hidden-state matching
 - Export + quantize ONNX
 - Record metrics report under `docs/reports/`
+- Record tokenizer sanity diagnostics in report and block promotion when tokenizer checks fail
 
 ### Milestone 3: Extension wiring
 

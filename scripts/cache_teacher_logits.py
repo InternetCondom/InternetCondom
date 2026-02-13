@@ -190,13 +190,13 @@ def cache_split(
             for model in models:
                 with torch.autocast(device_type=device.type, enabled=use_amp, dtype=amp_dtype):
                     out = model(input_ids=input_ids, attention_mask=attention_mask)
-                scam = out["scam_logits"].detach().cpu().numpy()
-                topic = out["topic_logits"].detach().cpu().numpy()
+                scam = out["scam_logits"].detach().cpu().float().numpy()
+                topic = out["topic_logits"].detach().cpu().float().numpy()
                 hidden_states = out["hidden_states"]
 
                 selected = []
                 for idx in hid_indices:
-                    layer_tensor = hidden_states[idx].detach().cpu().numpy()
+                    layer_tensor = hidden_states[idx].detach().cpu().float().numpy()
                     selected.append(layer_tensor[:, 0, :])  # CLS vectors
                 selected_arr = np.stack(selected, axis=1)
 

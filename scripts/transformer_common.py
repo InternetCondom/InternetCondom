@@ -470,3 +470,106 @@ def save_json(path: Path, payload: dict[str, Any]) -> None:
 def load_json(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def tokenizer_backend_vocab_size(tokenizer: Any) -> int:
+    backend = getattr(tokenizer, "backend_tokenizer", None)
+    if backend is not None:
+        get_vocab_size = getattr(backend, "get_vocab_size", None)
+        if callable(get_vocab_size):
+            try:
+                return int(get_vocab_size(with_added_tokens=False))
+            except TypeError:
+                return int(get_vocab_size(False))
+    return int(getattr(tokenizer, "vocab_size", len(tokenizer)))
+
+
+def tokenizer_sample_unk_ratio(
+    tokenizer: Any,
+    sample_texts: Sequence[str],
+    *,
+    max_length: int,
+    sample_size: int,
+) -> tuple[float, int]:
+    if not sample_texts:
+        return 0.0, 0
+
+    take = min(len(sample_texts), sample_size)
+    unk_id = getattr(tokenizer, "unk_token_id", None)
+    if unk_id is None:
+        return 0.0, take
+
+    special_ids = {
+        token_id
+        for token_id in (
+            getattr(tokenizer, "pad_token_id", None),
+            getattr(tokenizer, "cls_token_id", None),
+            getattr(tokenizer, "sep_token_id", None),
+            getattr(tokenizer, "mask_token_id", None),
+        )
+        if token_id is not None
+    }
+
+    unk_count = 0
+    total_count = 0
+    for text in sample_texts[:take]:
+        enc = tokenizer(
+            text,
+            truncation=True,
+            padding="max_length",
+            max_length=max_length,
+            return_attention_mask=False,
+        )
+        input_ids = enc.get("input_ids", [])
+        for token_id in input_ids:
+            if token_id in special_ids:
+                continue
+            total_count += 1
+            if token_id == unk_id:
+                unk_count += 1
+
+    if total_count == 0:
+        return 0.0, take
+    return float(unk_count / total_count), take
+
+
+def assert_tokenizer_sanity(
+    *,
+    tokenizer: Any,
+    expected_vocab_size: int,
+    context: str,
+    sample_texts: Sequence[str] | None = None,
+    max_length: int = 96,
+    max_unk_ratio: float = 0.05,
+    sample_size: int = 512,
+) -> dict[str, float | int]:
+    backend_vocab = tokenizer_backend_vocab_size(tokenizer)
+    loaded_vocab = int(len(tokenizer))
+
+    if backend_vocab != expected_vocab_size:
+        raise SystemExit(
+            f"{context}: tokenizer backend vocab size {backend_vocab} != expected {expected_vocab_size} "
+            f"(len={loaded_vocab}). This usually indicates incorrect tokenizer loading."
+        )
+
+    stats: dict[str, float | int] = {
+        "backend_vocab_size": backend_vocab,
+        "loaded_vocab_size": loaded_vocab,
+    }
+
+    if sample_texts is not None:
+        unk_ratio, sample_count = tokenizer_sample_unk_ratio(
+            tokenizer,
+            sample_texts,
+            max_length=max_length,
+            sample_size=sample_size,
+        )
+        stats["sample_count"] = sample_count
+        stats["sample_unk_ratio"] = unk_ratio
+        if unk_ratio > max_unk_ratio:
+            raise SystemExit(
+                f"{context}: tokenizer UNK ratio {unk_ratio:.4f} exceeds max {max_unk_ratio:.4f} "
+                f"on sample_size={sample_count}."
+            )
+
+    return stats

@@ -22,6 +22,7 @@ from transformer_common import (
     MODELS_DIR,
     TRAINING_CLASSES,
     PreparedRecord,
+    assert_tokenizer_sanity,
     decision_from_probs,
     exact_match_accuracy,
     load_prepared_rows,
@@ -32,6 +33,7 @@ from transformer_common import (
     set_seed,
     sigmoid,
     softmax,
+    tokenizer_backend_vocab_size,
 )
 
 DEFAULT_TRAIN = DATA_DIR / "transformer" / "train.prepared.jsonl"
@@ -183,27 +185,35 @@ def train_or_load_tokenizer(
     tokenizer_dir: Path,
     vocab_size: int,
     min_frequency: int,
+    max_length: int,
+    max_unk_ratio: float,
+    sanity_sample_size: int,
 ) -> BertTokenizerFast:
-    def ensure_target_vocab(tokenizer: BertTokenizerFast) -> BertTokenizerFast:
-        current_size = int(len(tokenizer))
-        if current_size > vocab_size:
-            raise RuntimeError(
-                f"Tokenizer vocab ({current_size}) exceeds requested vocab_size ({vocab_size})."
-            )
-        if current_size < vocab_size:
-            pad_tokens = [f"[UNUSED_{i}]" for i in range(vocab_size - current_size)]
-            tokenizer.add_tokens(pad_tokens)
-            tokenizer.save_pretrained(str(tokenizer_dir))
-        return tokenizer
+    sample_texts = [row.text_normalized for row in rows]
 
     vocab_path = tokenizer_dir / "vocab.txt"
     if vocab_path.exists():
-        tokenizer = BertTokenizerFast.from_pretrained(str(tokenizer_dir))
-        if int(len(tokenizer)) == vocab_size:
+        try:
+            tokenizer = BertTokenizerFast.from_pretrained(str(tokenizer_dir))
+            stats = assert_tokenizer_sanity(
+                tokenizer=tokenizer,
+                expected_vocab_size=vocab_size,
+                context="train_transformer_student_distill.py existing tokenizer",
+                sample_texts=sample_texts,
+                max_length=max_length,
+                max_unk_ratio=max_unk_ratio,
+                sample_size=sanity_sample_size,
+            )
+            print(
+                "Tokenizer sanity (existing): "
+                f"backend_vocab={stats['backend_vocab_size']} "
+                f"len={stats['loaded_vocab_size']} "
+                f"unk_ratio={float(stats.get('sample_unk_ratio', 0.0)):.4f} "
+                f"sample_count={int(stats.get('sample_count', 0))}"
+            )
             return tokenizer
-        print(
-            f"Tokenizer at {tokenizer_dir} has vocab={len(tokenizer)} (target={vocab_size}); rebuilding."
-        )
+        except SystemExit as exc:
+            print(f"Tokenizer at {tokenizer_dir} failed sanity checks ({exc}); rebuilding.")
 
     tokenizer_dir.mkdir(parents=True, exist_ok=True)
     wp = BertWordPieceTokenizer(lowercase=True, strip_accents=False, clean_text=False)
@@ -216,7 +226,7 @@ def train_or_load_tokenizer(
     wp.save_model(str(tokenizer_dir))
 
     tokenizer = BertTokenizerFast(
-        vocab_file=str(vocab_path),
+        vocab=str(vocab_path),
         do_lower_case=True,
         unk_token="[UNK]",
         sep_token="[SEP]",
@@ -225,7 +235,24 @@ def train_or_load_tokenizer(
         mask_token="[MASK]",
     )
     tokenizer.save_pretrained(str(tokenizer_dir))
-    return ensure_target_vocab(tokenizer)
+    tokenizer = BertTokenizerFast.from_pretrained(str(tokenizer_dir))
+    stats = assert_tokenizer_sanity(
+        tokenizer=tokenizer,
+        expected_vocab_size=vocab_size,
+        context="train_transformer_student_distill.py rebuilt tokenizer",
+        sample_texts=sample_texts,
+        max_length=max_length,
+        max_unk_ratio=max_unk_ratio,
+        sample_size=sanity_sample_size,
+    )
+    print(
+        "Tokenizer sanity (rebuilt): "
+        f"backend_vocab={stats['backend_vocab_size']} "
+        f"len={stats['loaded_vocab_size']} "
+        f"unk_ratio={float(stats.get('sample_unk_ratio', 0.0)):.4f} "
+        f"sample_count={int(stats.get('sample_count', 0))}"
+    )
+    return tokenizer
 
 
 def compute_weights(rows: list[PreparedRecord], device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
@@ -269,8 +296,8 @@ def evaluate_model(
             with torch.autocast(device_type=device.type, enabled=use_amp, dtype=amp_dtype):
                 out = model(input_ids=input_ids, attention_mask=attention_mask)
 
-            scam_logits = out["scam_logits"].detach().cpu().numpy()
-            topic_logits = out["topic_logits"].detach().cpu().numpy()
+            scam_logits = out["scam_logits"].detach().cpu().float().numpy()
+            topic_logits = out["topic_logits"].detach().cpu().float().numpy()
             scam_probs = softmax(scam_logits)[:, 1]
             topic_probs = sigmoid(topic_logits)
 
@@ -323,6 +350,8 @@ def main() -> None:
     parser.add_argument("--alpha", type=float, default=0.5, help="Hard loss weight")
     parser.add_argument("--hidden-loss-weight", type=float, default=0.2)
     parser.add_argument("--max-length", type=int, default=96)
+    parser.add_argument("--max-unk-ratio", type=float, default=0.05)
+    parser.add_argument("--tokenizer-sanity-sample-size", type=int, default=512)
     parser.add_argument("--vocab-size", type=int, default=8192)
     parser.add_argument("--min-frequency", type=int, default=1)
     parser.add_argument("--hidden-size", type=int, default=192)
@@ -359,9 +388,12 @@ def main() -> None:
         tokenizer_dir=tokenizer_dir,
         vocab_size=args.vocab_size,
         min_frequency=args.min_frequency,
+        max_length=args.max_length,
+        max_unk_ratio=args.max_unk_ratio,
+        sanity_sample_size=args.tokenizer_sanity_sample_size,
     )
 
-    vocab_size_actual = int(len(tokenizer))
+    vocab_size_actual = tokenizer_backend_vocab_size(tokenizer)
     if vocab_size_actual != args.vocab_size:
         raise SystemExit(
             f"Tokenizer vocab size mismatch: expected {args.vocab_size}, got {vocab_size_actual}."

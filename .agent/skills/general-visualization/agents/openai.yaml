@@ -1,0 +1,4 @@
+interface:
+  display_name: "General Visualization"
+  short_description: "Present comparisons and metrics with aligned plain-text layouts"
+  default_prompt: "Use this skill to format side-by-side metric comparisons with readable fixed-width alignment, no markdown tables, and explicit better/worse labels."

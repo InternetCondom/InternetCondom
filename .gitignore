@@ -22,6 +22,7 @@ data/train_pool.jsonl
 data/train_valid.jsonl
 data/train.jsonl
 data/valid.jsonl
+data/transformer/
 data/stratified_split_meta.json
 data/stratified_split_report.json
 data/split_drift_report.json
