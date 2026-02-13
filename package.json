@@ -10,8 +10,8 @@
   },
   "scripts": {
     "prepare": "husky",
-    "format": "prettier --write . --ignore-unknown && ruff format .",
-    "format:check": "prettier --check . --ignore-unknown && ruff format --check .",
+    "format": "prettier --write . --ignore-unknown && uvx ruff format .",
+    "format:check": "prettier --check . --ignore-unknown && uvx ruff format --check .",
     "simpledoc": "node ~/SimpleDoc/dist/bin/simpledoc.js",
     "simpledoc:check": "node ~/SimpleDoc/dist/bin/simpledoc.js check",
     "webapp:dev": "npx wrangler pages dev webapp --port 8788",
@@ -19,6 +19,6 @@
   },
   "lint-staged": {
     "*.{js,mjs,cjs,ts,tsx,json,css,md,html,yaml,yml}": "prettier --write --ignore-unknown",
-    "*.py": "ruff format"
+    "*.py": "uvx ruff format"
   }
 }
