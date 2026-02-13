@@ -13,7 +13,16 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from transformers import BertConfig, BertModel, BertTokenizerFast
 
-from transformer_common import DATA_DIR, MODELS_DIR, decision_from_probs, load_json, load_prepared_rows, sigmoid, softmax
+from transformer_common import (
+    DATA_DIR,
+    MODELS_DIR,
+    assert_tokenizer_sanity,
+    decision_from_probs,
+    load_json,
+    load_prepared_rows,
+    sigmoid,
+    softmax,
+)
 
 DEFAULT_STUDENT_DIR = MODELS_DIR / "student"
 DEFAULT_TRAIN = DATA_DIR / "transformer" / "train.prepared.jsonl"
@@ -87,6 +96,8 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--parity-samples", type=int, default=1000)
     parser.add_argument("--max-length", type=int, default=96)
+    parser.add_argument("--max-unk-ratio", type=float, default=0.05)
+    parser.add_argument("--tokenizer-sanity-sample-size", type=int, default=512)
     parser.add_argument("--max-mean-delta", type=float, default=0.01)
     parser.add_argument("--min-label-agreement", type=float, default=0.99)
     args = parser.parse_args()
@@ -126,6 +137,24 @@ def main() -> None:
     model.eval()
     max_length = int(arch.get("max_length", args.max_length))
 
+    rows = load_prepared_rows(args.valid) + load_prepared_rows(args.train)
+    tokenizer_stats = assert_tokenizer_sanity(
+        tokenizer=tokenizer,
+        expected_vocab_size=int(arch["vocab_size"]),
+        context="export_transformer_student_onnx.py",
+        sample_texts=[row.text_normalized for row in rows],
+        max_length=max_length,
+        max_unk_ratio=args.max_unk_ratio,
+        sample_size=args.tokenizer_sanity_sample_size,
+    )
+    print(
+        "Tokenizer sanity: "
+        f"backend_vocab={tokenizer_stats['backend_vocab_size']} "
+        f"len={tokenizer_stats['loaded_vocab_size']} "
+        f"unk_ratio={float(tokenizer_stats.get('sample_unk_ratio', 0.0)):.4f} "
+        f"sample_count={int(tokenizer_stats.get('sample_count', 0))}"
+    )
+
     dummy_input_ids = torch.ones((1, max_length), dtype=torch.long)
     dummy_attention = torch.ones((1, max_length), dtype=torch.long)
 
@@ -147,7 +176,6 @@ def main() -> None:
     )
     print(f"Exported ONNX model to {args.out}")
 
-    rows = load_prepared_rows(args.valid) + load_prepared_rows(args.train)
     if len(rows) < args.parity_samples:
         raise SystemExit(
             f"Need at least {args.parity_samples} samples for parity, but only found {len(rows)}."

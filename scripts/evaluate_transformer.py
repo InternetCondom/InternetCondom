@@ -19,6 +19,7 @@ from transformer_common import (
     MODELS_DIR,
     TRAINING_CLASSES,
     PreparedRecord,
+    assert_tokenizer_sanity,
     binary_pr_auc,
     brier_score,
     calibration_bins,
@@ -139,8 +140,8 @@ def infer_probs_torch(
             attention = batch["attention_mask"].to(device)
             with torch.autocast(device_type=device.type, enabled=use_amp, dtype=torch.bfloat16):
                 scam_logits, topic_logits = model(input_ids=input_ids, attention_mask=attention)
-            scam_prob = softmax(scam_logits.detach().cpu().numpy())[:, 1]
-            topic_prob = sigmoid(topic_logits.detach().cpu().numpy().reshape(-1))
+            scam_prob = softmax(scam_logits.detach().cpu().float().numpy())[:, 1]
+            topic_prob = sigmoid(topic_logits.detach().cpu().float().numpy().reshape(-1))
             scam_probs.extend(scam_prob.tolist())
             topic_probs.extend(topic_prob.tolist())
 
@@ -395,6 +396,8 @@ def main() -> None:
     parser.add_argument("--onnx", type=Path, default=None, help="If set, evaluate this ONNX model")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--max-length", type=int, default=96)
+    parser.add_argument("--max-unk-ratio", type=float, default=0.05)
+    parser.add_argument("--tokenizer-sanity-sample-size", type=int, default=512)
     parser.add_argument("--target-scam-fpr", type=float, default=0.02)
     parser.add_argument("--threshold-step", type=float, default=0.01)
     parser.add_argument(
@@ -421,6 +424,22 @@ def main() -> None:
 
     model, tokenizer, student_cfg = load_student_torch(args.student_dir)
     max_length = int(student_cfg["architecture"].get("max_length", args.max_length))
+    tokenizer_stats = assert_tokenizer_sanity(
+        tokenizer=tokenizer,
+        expected_vocab_size=int(student_cfg["architecture"]["vocab_size"]),
+        context="evaluate_transformer.py",
+        sample_texts=[row.text_normalized for row in train_rows],
+        max_length=max_length,
+        max_unk_ratio=args.max_unk_ratio,
+        sample_size=args.tokenizer_sanity_sample_size,
+    )
+    print(
+        "Tokenizer sanity: "
+        f"backend_vocab={tokenizer_stats['backend_vocab_size']} "
+        f"len={tokenizer_stats['loaded_vocab_size']} "
+        f"unk_ratio={float(tokenizer_stats.get('sample_unk_ratio', 0.0)):.4f} "
+        f"sample_count={int(tokenizer_stats.get('sample_count', 0))}"
+    )
 
     if args.onnx is None:
         valid_scam, valid_topic = infer_probs_torch(
