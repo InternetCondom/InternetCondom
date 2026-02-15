@@ -49,7 +49,7 @@ const normalizeText = (text: unknown): string =>
     .replace(/\s+/g, " ")
     .trim();
 
-const previewText = (text: unknown, limit = 200): string => {
+const previewText = (text: unknown, limit = 500): string => {
   const cleaned = normalizeText(text);
   if (cleaned.length <= limit) return cleaned;
   return `${cleaned.slice(0, limit)}...`;

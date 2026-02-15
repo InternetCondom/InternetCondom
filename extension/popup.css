@@ -21,6 +21,11 @@ body {
   color: var(--text);
 }
 
+p {
+  margin: 0;
+  line-height: 1.25;
+}
+
 .app {
   padding: 12px;
   display: grid;
@@ -33,7 +38,7 @@ header h1 {
 }
 
 header p {
-  margin: 2px 0 0;
+  margin: 1px 0 0;
   font-size: 0.78rem;
   color: var(--muted);
 }

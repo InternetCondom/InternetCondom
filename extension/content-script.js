@@ -36,7 +36,7 @@ const normalizeText = (text) =>
   String(text || "")
     .replace(/\s+/g, " ")
     .trim();
-const previewText = (text, limit = 200) => {
+const previewText = (text, limit = 500) => {
   const cleaned = normalizeText(text);
   if (cleaned.length <= limit) return cleaned;
   return `${cleaned.slice(0, limit)}...`;
