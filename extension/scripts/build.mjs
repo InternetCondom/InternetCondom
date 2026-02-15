@@ -1,4 +1,14 @@
+import { copyFile, mkdir, stat } from "node:fs/promises";
+import path from "node:path";
 import { build } from "esbuild";
+
+const ORT_DIST_DIR = path.resolve("node_modules/onnxruntime-web/dist");
+const ORT_VENDOR_DIR = path.resolve("extension/vendor/onnxruntime-web");
+const ORT_RUNTIME_FILES = [
+  "ort.wasm.min.mjs",
+  "ort-wasm-simd-threaded.mjs",
+  "ort-wasm-simd-threaded.wasm",
+];
 
 const ENTRY_POINTS = [
   "extension/src/background.ts",
@@ -13,6 +23,33 @@ const ENTRY_POINTS = [
   "extension/src/tests/wasm-smoke.ts",
   "extension/src/tests/transformer-smoke.ts",
 ];
+
+const copyOrtRuntimeAssets = async () => {
+  try {
+    await stat(ORT_DIST_DIR);
+  } catch {
+    throw new Error(
+      "Missing onnxruntime-web runtime files. Run `npm install` before `npm run extension:build`.",
+    );
+  }
+
+  await mkdir(ORT_VENDOR_DIR, { recursive: true });
+
+  for (const fileName of ORT_RUNTIME_FILES) {
+    const sourcePath = path.join(ORT_DIST_DIR, fileName);
+    const destinationPath = path.join(ORT_VENDOR_DIR, fileName);
+    try {
+      await stat(sourcePath);
+    } catch {
+      throw new Error(
+        `onnxruntime-web runtime file missing: ${sourcePath}. Check pinned package version.`,
+      );
+    }
+    await copyFile(sourcePath, destinationPath);
+  }
+};
+
+await copyOrtRuntimeAssets();
 
 await build({
   entryPoints: ENTRY_POINTS,

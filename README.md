@@ -44,10 +44,12 @@ The approach: start narrow (crypto scams have clear ground truth), prove the pip
 ## Install
 
 1. Clone or download this repo
-2. Open Chrome → `chrome://extensions`
-3. Enable **Developer mode** (top right)
-4. Click **Load unpacked** → select the `extension/` folder
-5. Pin the extension to your toolbar
+2. Install dependencies: `npm install`
+3. Build extension assets: `npm run extension:build`
+4. Open Chrome → `chrome://extensions`
+5. Enable **Developer mode** (top right)
+6. Click **Load unpacked** → select the `extension/` folder
+7. Pin the extension to your toolbar
 
 ## How It Works
 
@@ -83,6 +85,7 @@ Janitr keeps a rolling artifact repo on Hugging Face for large model files and d
 - **Repo:** [`janitr/experiments`](https://huggingface.co/janitr/experiments)
 - **Purpose:** store versioned experiment runs and dataset snapshots without bloating the main git repo
 - **Structure:** runs are indexed with `runs/INDEX.json`; each run has `RUN_INFO.json` plus model/eval files
+- **Scope boundary:** Hugging Face stores model/dataset artifacts only (ONNX, tokenizer, thresholds, eval, dataset checkpoints). Runtime app assets (ONNX Runtime Web JS/WASM) stay in the main `janitr` repo build pipeline.
 
 ### Extension approach (advanced mode)
 
@@ -125,6 +128,10 @@ The extension lives in `extension/`. Key files:
 - `src/` — TypeScript source for background/content/offscreen/options/popup
 - `transformer/` — bundled transformer runtime + model loader
 - `fasttext/` — WASM runtime + quantized fallback model + thresholds
+
+Build command:
+
+- `npm run extension:build` transpiles TS and stages required ONNX Runtime Web assets from `node_modules/onnxruntime-web/dist` into `extension/vendor/onnxruntime-web/`.
 
 ### Quantization
 
