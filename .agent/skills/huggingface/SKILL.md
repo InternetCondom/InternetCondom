@@ -1,6 +1,6 @@
 ---
 name: huggingface
-description: Sync Janitr experiment artifacts from remote to local and publish to Hugging Face experiments repo with the repo scripts.
+description: Sync Janitr experiment artifacts from remote to local and publish to Hugging Face experiments repo with single-index and manifest validation.
 ---
 
 # Hugging Face Experiments Skill
@@ -15,12 +15,18 @@ Use the repo scripts to move experiment artifacts from the remote machine to a l
 - Local experiments clone: `~/offline/janitr-experiments`
 - Remote-to-local sync script: `scripts/sync_experiments_from_remote.sh`
 - Remote artifact staging script: `scripts/sync_to_experiments_repo.py`
+- Index rebuild script: `scripts/rebuild_experiment_index.py`
+- Manifest validation script: `scripts/validate_experiment_runs.py`
 
 ## Rules
 
 - Default sync is full repo sync. Do not pass `--run-id` unless explicitly requested.
 - Prefer the provided scripts over bare `rsync` commands.
 - Keep run naming format as `yyyy-mm-dd-<petname>` when creating new run directories.
+- Runs root must contain exactly one index file: `runs/INDEX.json`.
+- Always rebuild index after run changes and validate before commit/push.
+- Keep model artifacts at or below 30MB.
+- Use `--delete` when syncing remote to local to prevent stale/empty local run dirs.
 
 ## Workflow
 
@@ -32,13 +38,14 @@ python3 scripts/sync_to_experiments_repo.py \
   --run-id 2026-02-15-flying-narwhal
 ```
 
-2. Sync remote experiments repo to local (default full sync, no run filter):
+2. Sync remote experiments repo to local (default full sync, no run filter, mirror mode):
 
 ```bash
 bash scripts/sync_experiments_from_remote.sh \
   --remote bob@<remote-host> \
   --remote-path /home/bob/offline/janitr-experiments \
-  --dest ~/offline/janitr-experiments
+  --dest ~/offline/janitr-experiments \
+  --delete
 ```
 
 3. Optional dry-run before real sync:
@@ -48,10 +55,22 @@ bash scripts/sync_experiments_from_remote.sh \
   --remote bob@<remote-host> \
   --remote-path /home/bob/offline/janitr-experiments \
   --dest ~/offline/janitr-experiments \
+  --delete \
   --dry-run
 ```
 
-4. Commit and push from local experiments clone:
+4. Rebuild single index and validate manifests:
+
+```bash
+python3 scripts/rebuild_experiment_index.py \
+  --runs-root ~/offline/janitr-experiments/runs
+
+python3 scripts/validate_experiment_runs.py \
+  --runs-root ~/offline/janitr-experiments/runs \
+  --require-runs-root
+```
+
+5. Commit and push from local experiments clone:
 
 ```bash
 cd ~/offline/janitr-experiments
