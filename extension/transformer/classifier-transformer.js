@@ -37,9 +37,17 @@ const defaultAssetUrl = (filename) => {
 const resolveRelativeAssetUrl = (relativePath) =>
   new URL(relativePath, import.meta.url).toString();
 const fetchText = async (url, label) => {
-  const res = await fetch(url);
+  let res;
+  try {
+    res = await fetch(url);
+  } catch (err) {
+    const reason = String(err && err.message ? err.message : err);
+    throw new Error(`Failed to fetch ${label} from ${url}: ${reason}`);
+  }
   if (!res.ok) {
-    throw new Error(`Failed to load ${label}: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `Failed to load ${label} from ${url}: ${res.status} ${res.statusText}`,
+    );
   }
   return res.text();
 };
@@ -417,10 +425,19 @@ const loadTransformerModel = async ({
           ? modelData
           : new Uint8Array(modelData)
         : resolvedModelUrl;
-      const session = await ort.InferenceSession.create(modelSource, {
-        executionProviders: ["wasm"],
-        graphOptimizationLevel: "all",
-      });
+      let session;
+      try {
+        session = await ort.InferenceSession.create(modelSource, {
+          executionProviders: ["wasm"],
+          graphOptimizationLevel: "all",
+        });
+      } catch (err) {
+        const reason = String(err && err.message ? err.message : err);
+        const wasmPaths = String(ort?.env?.wasm?.wasmPaths || "unset");
+        throw new Error(
+          `Failed to initialize ONNX session (wasmPaths=${wasmPaths}): ${reason}`,
+        );
+      }
       return {
         ort,
         session,
