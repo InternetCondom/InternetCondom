@@ -15,6 +15,7 @@ Use the repo scripts to move experiment artifacts from the remote machine to a l
 - Local experiments clone: `~/offline/janitr-experiments`
 - Remote-to-local sync script: `scripts/sync_experiments_from_remote.sh`
 - Remote artifact staging script: `scripts/sync_to_experiments_repo.py`
+- Dataset sync script: `scripts/sync_datasets_to_experiments_repo.py`
 - Index rebuild script: `scripts/rebuild_experiment_index.py`
 - Manifest validation script: `scripts/validate_experiment_runs.py`
 
@@ -27,6 +28,8 @@ Use the repo scripts to move experiment artifacts from the remote machine to a l
 - Always rebuild index after run changes and validate before commit/push.
 - Keep model artifacts at or below 30MB.
 - Use `--delete` when syncing remote to local to prevent stale/empty local run dirs.
+- Dataset snapshots use auto names `yyyy-mm-dd-<petname>` by default.
+- Dataset sync is deduplicated by content hash; no new snapshot is created when x-posts+x-replies files are unchanged.
 
 ## Workflow
 
@@ -79,6 +82,25 @@ git add runs
 git commit -m "add experiment run(s)"
 git push
 ```
+
+## Dataset Snapshots
+
+Use this to stage current x-posts + x-replies datasets into the experiments repo:
+
+```bash
+python3 scripts/sync_datasets_to_experiments_repo.py \
+  --dest-root ~/offline/janitr-experiments
+```
+
+Defaults:
+- x-posts dataset source: `data/sample.jsonl`
+- x-replies dataset source: `data/replies.jsonl`
+- snapshot id: auto-generated `yyyy-mm-dd-<petname>`
+
+Behavior:
+- Writes snapshot under `datasets/snapshots/<snapshot_id>/`.
+- Updates `datasets/INDEX.json`.
+- If content is unchanged (same hashes), does not create a duplicate snapshot.
 
 ## Optional: Sync a Single Run
 
