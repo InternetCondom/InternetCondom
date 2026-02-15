@@ -2,7 +2,7 @@
 
 <img src="assets/logo.svg" alt="Janitr logo" width="200">
 
-A browser extension that filters crypto scams, AI-generated replies, and promotional spam from your social media feeds. Inference runs locally on-device; advanced mode can optionally fetch model runs from Hugging Face.
+A browser extension that filters crypto scams, AI-generated replies, and promotional spam from your social media feeds. Inference runs locally on-device.
 
 > **⚠️ Work in Progress**: This is an MVP. Currently it only works on X (Twitter) for demoing scam detection. Try it out, and if you have ideas for new content categories or improvements, tag or DM [@janitr_ai](https://x.com/janitr_ai) on X.
 
@@ -24,11 +24,14 @@ Models trained on top of this dataset are a separate concern. Different models w
 
 A core principle is that models must run **locally on your device** — no cloud, no API calls, no data leaving your browser. This means optimizing for small model sizes and fast inference so detection works on everything from phones to older laptops. Privacy isn't optional.
 
-The current implementation uses **fastText** (123KB quantized model running via WebAssembly), but the underlying ML approach may evolve as we expand to more content categories.
+The current implementation supports **two local backends**:
+
+- **Transformer (default):** ONNX Runtime Web, stronger scam detection, larger model
+- **fastText:** ultra-small WASM path, useful as a lightweight fallback
 
 **Current dataset:**
 
-~2,900 multi-label samples, all sourced from X via browser automation and human-verified. See [LABELS.md](docs/LABELS.md) for the full label guide.
+~4,200+ multi-label samples, all sourced from X via browser automation and human-verified. See [LABELS.md](docs/LABELS.md) for the full label guide.
 
 This entire project — data collection, labeling, model training, and the extension itself — was built using [OpenClaw](https://github.com/openclaw/openclaw), an open framework for personal AI assistants.
 
@@ -48,29 +51,30 @@ The approach: start narrow (crypto scams have clear ground truth), prove the pip
 
 ## How It Works
 
-- **fastText model** runs in-browser via WebAssembly
 - **Transformer model** runs in-browser via ONNX Runtime Web (default backend)
+- **fastText model** runs in-browser via WebAssembly (optional fallback backend)
 - **Content scripts** scan posts and DMs as you scroll
 - **3-class detection**: `scam`, `topic_crypto`, `clean` (backed by a [100+ label taxonomy](docs/LABELS.md))
 - **Thresholds** are tunable per-class to control false positive rate
-- **No network calls during inference** — classification happens on your CPU
+- **No network calls during inference** — classification happens on your CPU (network is only used when you explicitly download remote runs in advanced mode)
 
 ## Model Performance
 
-| Metric                 | Value              |
-| ---------------------- | ------------------ |
-| Model size             | 123 KB (quantized) |
-| Scam precision         | 95%                |
-| Scam recall            | 64%                |
-| topic_crypto precision | 79%                |
-| topic_crypto recall    | 37%                |
-| Target FPR             | ≤ 2%               |
+Frozen-split benchmark (expanded holdout, see `docs/reports/2026-02-14-frozen-split-fasttext-vs-transformer-benchmark.md`):
 
-Current thresholds (`extension/fasttext/thresholds.json`), tuned for ≤ 2% FPR:
+| Metric      | fastText (ftz) | Transformer (int8 ONNX) |
+| ----------- | -------------- | ----------------------- |
+| Scam P      | 0.9128         | 0.9375                  |
+| Scam R      | 0.5551         | 0.6122                  |
+| Scam F1     | 0.6904         | 0.7407                  |
+| Scam FPR    | 0.0158         | 0.0121                  |
+| Macro F1    | 0.7838         | 0.8013                  |
+| Exact Match | 0.7624         | 0.8241                  |
 
-- `scam`: 0.93
-- `topic_crypto`: 0.91
-- `clean`: 0.1
+Model artifact sizes from the same benchmark:
+
+- fastText `.ftz`: ~123 KB
+- transformer int8 ONNX: ~3.4 MB
 
 ## Hugging Face Experiment Runs
 
@@ -83,6 +87,7 @@ Janitr keeps a rolling artifact repo on Hugging Face for large model files and d
 ### Extension approach (advanced mode)
 
 - The extension ships with bundled local models and works offline by default.
+- Default backend is `transformer`; you can switch backend from the popup or options page.
 - In advanced mode (`Options` page), you can:
 
 1. list remote runs from Hugging Face
@@ -97,13 +102,19 @@ Janitr keeps a rolling artifact repo on Hugging Face for large model files and d
 ### Training pipeline
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install fasttext-wheel
+# FastText path
+uv run --project scripts python scripts/prepare_data.py
+uv run --project scripts python scripts/train_fasttext.py
+uv run --project scripts python scripts/evaluate.py
 
-make prepare   # prepare train/valid splits
-make train     # train fastText model
-make eval      # evaluate on test set
+# Transformer path (teacher -> student -> eval)
+uv run --project scripts python scripts/train_transformer_teacher.py --seeds 13,42,7
+uv run --project scripts python scripts/calibrate_teacher.py
+uv run --project scripts python scripts/cache_teacher_logits.py
+uv run --project scripts python scripts/train_transformer_student_distill.py
+uv run --project scripts python scripts/export_transformer_student_onnx.py
+uv run --project scripts python scripts/quantize_transformer_student.py
+uv run --project scripts python scripts/evaluate_transformer.py
 ```
 
 ### Extension development
@@ -111,9 +122,9 @@ make eval      # evaluate on test set
 The extension lives in `extension/`. Key files:
 
 - `manifest.json` — Chrome extension manifest (MV3)
-- `content-script.js` — injected into pages, scans DOM
-- `background.js` — service worker
-- `fasttext/` — WASM runtime + quantized model + thresholds
+- `src/` — TypeScript source for background/content/offscreen/options/popup
+- `transformer/` — bundled transformer runtime + model loader
+- `fasttext/` — WASM runtime + quantized fallback model + thresholds
 
 ### Quantization
 
@@ -145,7 +156,9 @@ See `docs/DATA_LABELING.md` for the labeling workflow.
 
 ## Local-First
 
-No network calls. No telemetry. No cloud. Your browsing stays private.
+No telemetry. No cloud inference. Your browsing stays private.
+
+By default, inference is fully local. Optional network access is only used when you explicitly download remote experiment artifacts in advanced mode.
 
 ## Similar Projects
 
